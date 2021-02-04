@@ -1,0 +1,420 @@
+---
+title: "Getting Started with `SteppedPower`"
+author:
+- name: Philipp Mildenberger^[pmildenb@uni-mainz.de]
+  affiliation: Institute of Medical Biostatistics, Epidemiology and Informatics ([IMBEI, Mainz](https://www.unimedizin-mainz.de/imbei/imbei/welcome-page.html?L=1))
+- name: Federico Marini^[marinif@uni-mainz.de]
+  affiliation: Institute of Medical Biostatistics, Epidemiology and Informatics ([IMBEI, Mainz](https://www.unimedizin-mainz.de/imbei/imbei/welcome-page.html?L=1))
+date: "`r Sys.Date()`"
+output: 
+  rmarkdown::html_vignette:
+    toc: true
+    number_sections: true
+bibliography: references.bib
+vignette: >
+  %\VignetteIndexEntry{Getting Started with `SteppedPower`}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  fig.width = 7,
+  warning = FALSE
+)
+library(knitr)
+library(SteppedPower)
+library(Matrix)
+```
+
+# About `SteppedPower`
+
+SteppedPower offers tools for power and sample size 
+calculation as well as design diagnostics for 
+longitudinal mixed model settings, with a focus on stepped wedge designs.
+Other implemented study design types are parallel, 
+parallel with baseline period(s) and 
+crossover designs. Further design types can be 
+easily defined by the user.  
+
+Currently, normal outcomes and binomial outcomes with 
+logit link are implemented. 
+The following random effects can be specified:
+random cluster intercept, random treatment effect, 
+random subject specific intercept and random time effect.
+The covariance structure can be compound symmetry or autoregressive.
+
+This code is modularised in order to be flexible and easy to use 
+(and hopefully to maintain as well). 
+At the same time, the use of sparse matrix classes of the `matrix` 
+package makes computation of large designs feasible. 
+
+# Methods and Notation
+
+A common approach to model the correlation in 
+longitudinal studies are random effects.[@hussey2007design; @li2020mixed]
+Such a model has the form
+
+$$y_{ijk}= \mu_0 + \alpha_i + T_{ij} \theta + b_j + e_{ijk}$$ 
+
+with
+
+* $y_{ijk}$ the response in cluster $j$ at time $i$ for individual $k$
+* $\mu_0$ a overall mean (under control)
+* $\alpha_i$ the time trend at time $i$
+* $T_{ij}$ indicates the treatment status (0 = control, 1 = interventional treatment)
+* $\theta$ the treatment effect 
+* $b_j$ a random cluster effect for cluster $j$ with $b_j \sim N(0,\tau^2)$
+* $e_{ijk}$ a normal random error term with $e_{ijk}\sim N(0,\sigma^2)$
+
+For power calculation, the standard deviation of random effects is assumed to be known.
+Lets define $\beta:=(\mu,\alpha',\theta)'$ and $\omega_{ijk}:=b_j+e_{ijk}$. 
+This leads to a compact and more general notation of the above equation:
+
+$$\begin{align}
+y_{ijk}&= X_{ij}\beta + \omega_{ijk}\\
+\text{or, in matrix notation:} \qquad \\
+y&=X\beta + \omega
+\end{align}$$ 
+
+Where $X$ is the corresponding design matrix and $\omega\sim N(0,\Omega)$,
+where $\Omega$ is a compound-symmetry (syn. exchangeable) variance matrix defined 
+by $\tau$ and $\sigma$. We are thus in a weighted least squares setting, 
+so the variance of $\beta$ is
+
+$$ \text{Var}(\hat\beta) =  {(X'\Omega^{-1}X)^{-1}}$$
+
+We can then calculate the power of a z-test 
+
+$$ \text{power} = \Phi\left(\frac{\theta_A-\theta_0}{\sqrt{\text{Var}(\hat \theta)}}- Z_{1-\frac{\alpha}{2}}\right) $$
+
+where $\text{Var}(\hat \theta)$ is the diagonal element of $\Omega$ 
+that corresponds to $\hat\theta$.
+
+Extensions to the above formula implemented in this package are  
+
+* random treatment effect
+* autoregressive cluster effect
+* binomial outcomes with logit-link
+
+with leads to the following extended model formula:
+
+$$y_{ijk}= g\big( \mu + \alpha_i + X (\theta_{ij} + c_j) + b_j + e_{ijk}\big)$$ 
+with  
+
+* $g(\cdot)$ a link function
+* $c_j$ a random treatment effect
+* $b_j$ and $c_j$ jointly distributed with $\left(\begin{smallmatrix} \tau^2 & \rho\tau\eta \\ \rho\tau\eta & \eta^2\end{smallmatrix}\right)$
+
+# A quick tour
+
+For most users, the probably most important function is `wlsPower`. 
+It calls several auxiliary functions which will be shortly discussed here.
+This section is not essential for the usage of `SteppedPower`, it might be
+helpful to design non-standard user defined settings. 
+
+`wlsPower` is essentially just a flexible wrapper for the function 
+`compute_wlsPower`, which does the actual computation.  
+`compute_wlsPower` then calls `constuct_DesMat` and `construct_CovMat`.
+
+`construct_DesMat` builds the design matrix which consists of the treatment 
+status, usually built by`construct_trtMat` and the time adjustment, usually
+built by `construct_timeadjust`. 
+There is also the option to pass a user defined definition of the treatment 
+status to `construct_DesMat`.
+If not specified, the number of timepoints is guessed as 
+the fewest number of periods (timepoints) possible with the given design, 
+i.e. two for cross-over designs or the number of waves plus one
+for stepped wedge designs. 
+
+`construct_CovMat` builds the covariance matrix (explicitly). It uses 
+`construct_CovBlk` to construct the blocks for each cluster which are then combined
+to a block diagonal matrix.
+
+# Features 
+
+## Plot Method
+
+In the weighted least squares setting, 
+the estimator $\hat \beta$ is a linear function of the data $y$
+
+$$\hat\beta = \underbrace{(X'\Omega^{-1}X)^{-1}(X'\Omega^{-1})}_{=:\text{M}}\cdot y$$
+
+with $X$ the design matrix and $\Omega$ the covariance matrix as above.
+The matrix $M$ gives an impression of the importance of clusters and 
+time periods with regard to the estimated coefficients $\hat\beta$. 
+The first row of $M$ corresponds to the coefficient of the treatment status, 
+i.e. the treatment effect.  
+The `plot.wlsPower` method visualises this first row of $M$ as a matrix 
+where rows and columns correspond to clusters and time periods, respectively.
+
+Furthermore, to give a rough comparison of importance between clusters 
+(or between time periods), the sum of absolute weights per row (or per column) 
+is also shown. 
+
+>CAVE: These are out-of-bag estimates for the influence of observations on 
+$\hat\theta$, but not for $\text{Var}(\hat\theta)$ !
+
+```{r}
+wlsPwr <- wlsPower(Cl=c(3,2,3), mu0=0, mu1=1, sigma=1, tau=.5, verbose=2)
+plot(wlsPwr)
+```
+
+## Find Sample Size for given Power
+
+When the argument `Power` is passed to `wlsPower`, 
+the sample size needed is calculated, under the assumption of equally sized 
+clusters and periods. 
+
+```{r}
+wlsPower(Cl=c(3,2,3), mu0=0, mu1=.2, sigma=1, tau=0, Power=.8)
+```
+
+# Use cases and examples
+
+## Comparison of two groups -- Z-Test
+
+This might be a proof of concept rather than an example with 
+practical relevance, but let's to compare the mean in two groups. 
+For two groups of 10 observations each, the power of a Z-test 
+can be calculated as follows:
+
+```{r}
+wlsPower(Cl=c(10,10), mu0=0,mu1=.6,sigma=1, tau=0, N=1, 
+              dsntype="parallel", timepoints=1)
+
+## the same:
+wlsPower(Cl=c(1,1), mu0=0,mu1=.6, sigma=1, tau=0, N=10,
+              dsntype="parallel", timepoints=1)
+```
+
+```{r}
+pwr::pwr.norm.test(.3,n=20)$power
+```
+
+>A quick Note on t-tests: It is much more challenging to use `SteppedPower` 
+to reproduce settings in which the variance is assumed to be unknown, 
+most prominently the well known t-test.
+In this package, you find implemented some (experimental) heuristics 
+for guessing the denominator degrees of freedom, but they yield rather 
+scaled Wald tests than t tests. 
+The main difference is that the distribution under 
+the alternative is assumed to be symmetric,
+whereas the t-test assumes a non-central (hence skewed) t-distribution.
+
+## Longitudinal study -- parallel groups
+
+```{r}
+wlsPower(Cl=c(10,10),timepoints=5,mu0=0,mu1=.25,
+         sigma=.5,dsntype="parallel")
+
+wlsPower(Cl=c(10,10),timepoints=5,mu0=0,mu1=.25,
+         sigma=.5,tau=.2,dsntype="parallel")
+```
+
+## Stepped Wedge designs with empty sequences (i.e. waves)
+
+
+Periods in which no cluster switches to the intervention 
+are specified by inserting zeros into 
+the `Cl` argument, i.e. `Cl=c(4,4,4,0)`.
+
+```{r, warning=FALSE}
+mod1 <- wlsPower(Cl=c(1,1,1,0), mu0=0, mu1=1, 
+                 sigma=0.4, tau=0, verbose=2)
+
+knitr::kable(mod1$DesignMatrix$trtMat)
+```
+
+## Autocorrelated cluster effects
+
+In longitudinal studies, it can be sensible to assume that correlation within 
+clusters decreases with increasing time lag.
+The argument `tauAR` enables the user to specify a AR-1 correlation. `tauAR`
+must be any value between `0` and `1`. 
+The former corresponds to i.i.d. observations, 
+the latter to the usual compound symmetry covariance type.  
+
+An example of a stepped wedge design with 8 clusters in 4 waves, 
+once with medium autocorrelation (`tauAR=0.6`) and 
+once with high autocorrelation (`tauAR=0.95`):
+
+```{r}
+mod2 <- wlsPower(Cl=c(2,2,2,2), mu0=0, mu1=1, 
+              sigma=1, N=100, tau=1, tauAR=.6, verbose=2)
+
+mod3 <- wlsPower(Cl=c(2,2,2,2), mu0=0, mu1=1, 
+              sigma=1, N=100, tau=1, tauAR=.95, verbose=2)
+```
+
+For `tauAR=0.6`, the covariance matrix within one cluster then looks like this:
+
+```{r, echo=FALSE}
+suppressWarnings(knitr::kable(as.matrix(mod2$CovarianceMatrix[1:5,1:5])))
+```
+
+For `tauAR=0.95` it takes the following shape
+
+```{r, echo=FALSE}
+suppressWarnings(knitr::kable(as.matrix(mod3$CovarianceMatrix[1:5,1:5])))
+rm(mod1,mod2,mod3)
+```
+
+## Unequal cluster sizes
+
+The argument `N` defines the cluster size. `N` can be 
+* a scalar, if all clusters have the same assumed size, 
+  which is also constant over time
+* a vector, if the size differs between clusters but 
+  is assumed to be constant over time
+* a matrix where each row corresponds to either 
+  a cluster or a wave of clusters and each column corresponds to a timepoint
+
+```{r}
+mod4 <- wlsPower(Cl=c(1,1,1), mu0=0, mu1=1, N=c(1,3,10), tau=.5, verbose=2)
+plot(mod4)
+```
+
+```{r, echo=FALSE}
+rm(mod4)
+```
+
+## Incomplete Stepped Wedge Designs
+
+Suppose you do not plan to observe all clusters over the whole study period.
+Rather, clusters that switch early to the intervention 
+are not observed until the end.
+Analogous, observation starts later in clusters 
+that switch towards the end of the study.
+This is sometimes called 'incomplete SWD' [hemming2015stepped].
+
+There are two ways to achieve this in `SteppedPower`, both by using the `incomplete` argument.
+One can either scalar, which then defines the number of observed periods before and 
+after the switch from control to intervention in each cluster.
+
+If for example the study consists of eight clusters 
+in four sequences (i.e. five timepoints), 
+and we observe two timepoints before and after the switch, then we receive
+
+```{r}
+incompletePwr <- wlsPower(Cl=rep(2,4), sigma=2, tau=.6, mu0=0,mu1=.5, N=80, 
+                             incomplete=2, verbose=2)
+incompletePwr
+```
+
+A slightly more tedious, but more flexible way is to define a matrix 
+where each row corresponds to either a cluster or a wave of clusters 
+and each column corresponds to a timepoint. 
+If a cluster is not observed at a specific timepoint, 
+set the value in the corresponding cell to `0`. 
+For the example above, such a matrix would look like this:
+
+```{r}
+TM  <- toeplitz(c(1,1,0,0))
+incompleteMat1 <- cbind(TM[,1:2],rep(1,4),TM[,3:4])
+incompleteMat2 <- incompleteMat1[rep(1:4,each=2),]
+```
+
+A matrix where each row represents a wave of clusters
+
+```{r, echo=FALSE}
+suppressWarnings(knitr::kable(incompleteMat1))
+```
+
+or each row represents a cluster
+
+```{r, echo=FALSE}
+suppressWarnings(knitr::kable(incompleteMat2))
+```
+
+Now all that's left to do is to plug that into the main function:
+
+```{r}
+incompletePwr1 <- wlsPower(Cl=rep(2,4), sigma=2, tau=.6, mu0=0, mu1=.5, N=80, 
+                        incomplete=incompleteMat1, verbose=2)
+incompletePwr2 <- wlsPower(Cl=rep(2,4), sigma=2, tau=.6, mu0=0, mu1=.5, N=80, 
+                        incomplete=incompleteMat2, verbose=2)
+
+all.equal(incompletePwr,incompletePwr1)
+all.equal(incompletePwr,incompletePwr2)
+```
+
+We can also have a quick look at the projection matrix where we see that the 
+clusters have a weight of exactly zero at the timepoints 
+where they are not observed
+
+```{r}
+plot(incompletePwr)
+```
+
+
+```{r, echo=FALSE}
+rm(incompletePwr,incompletePwr1,incompletePwr2,incompleteMat1,incompleteMat2)
+```
+
+> The argument `incomplete` with matrix input works also for other design types, 
+but makes (supposedly) most sense in the context of stepped wedge designs
+
+## Adjustment for Secular Trends 
+
+The most usual method for the modelling of potential secular trends is
+to take time period as a factor into the analysis model
+[@hussey2007design; @hemming2015stepped; @hemming2020reflection]. 
+
+For diagnostic purposes (or for bold users), some other adjustment options are 
+implemented.
+
+```{r}
+TimeAdj1 <- wlsPower(Cl=rep(2,4), mu0=0, mu1=1, tau=0, 
+                     timeAdjust="linear", verbose=2)
+
+TimeAdj2 <- wlsPower(Cl=rep(2,4), mu0=0, mu1=1, tau=0, 
+                     timeAdjust="factor", verbose=2)
+```
+
+Design matrix of the first cluster with linear adjustment for secular trend:
+```{r}
+knitr::kable(head(TimeAdj1$DesignMatrix$dsnmatrix, 5))
+```
+
+Design matrix of the first cluster with categorical adjustment for secular trend:
+```{r}
+knitr::kable(head(TimeAdj2$DesignMatrix$dsnmatrix, 5))
+```
+
+
+## Closed cohort SWD
+
+In a closed cohort the patients are observed over the whole study period. 
+The same correlation structure arises in cross sectional stepped wedge designs 
+if subclusters exist (such as wards within clinics). 
+The argument `psi` denotes the standard deviation of a 
+random subject (or subcluster) specific intercept.
+  
+The power is calculated on aggregated cluster means:
+```{r}
+Closed1 <- wlsPower(mu0=0, mu1=5, Cl=rep(3,3), sigma=5, tau=1, psi=2, gamma=1,
+                      N=3, verbose=2)
+a <- plot(Closed1$DesignMatrix)
+```
+
+With`INIDV_LVL=TRUE`, the calculation is done on the individual level. 
+This yields the same results but is far more comutationally expensive and is 
+mainly intended for diagnostic purposes.
+
+```{r}
+Closed2 <- wlsPower(mu0=0, mu1=5, Cl=rep(3,3), sigma=5, tau=1, psi=2, gamma=1,
+                      N=3, verbose=2, INDIV_LVL = TRUE)
+plot(Closed2)
+```
+
+
+# Session Info {-}
+
+```{r}
+sessionInfo()
+```
+
+# References {-}
