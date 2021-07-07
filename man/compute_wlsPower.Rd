@@ -2,7 +2,7 @@
 % Please edit documentation in R/wlsPower.R
 \name{compute_wlsPower}
 \alias{compute_wlsPower}
-\title{Compute Power via weighted least squares}
+\title{Compute power via weighted least squares}
 \usage{
 compute_wlsPower(
   DesMat,
@@ -10,8 +10,7 @@ compute_wlsPower(
   sigma,
   tau = 0,
   eta = NULL,
-  tauAR = NULL,
-  etaAR = NULL,
+  AR = NULL,
   rho = NULL,
   gamma = NULL,
   psi = NULL,
@@ -24,8 +23,7 @@ compute_wlsPower(
 )
 }
 \arguments{
-\item{DesMat}{list, containing a matrix, the design matrix,
-numeric timepoints, numeric total number of Clusters}
+\item{DesMat}{object of class `DesMat`.}
 
 \item{EffSize}{raw effect, i.e. difference between mean under control and
 mean under intervention}
@@ -37,12 +35,12 @@ mean under intervention}
 \item{eta}{numeric (scalar or matrix), standard deviation of random slopes.
 If `eta` is given as scalar, `trtMat` is needed as well.}
 
-\item{tauAR}{numeric (scalar), value between 0 and 1. Defaults to NULL.
-If `tauAR` is not NULL, the random intercept `tau` is AR1-correlated.
-*Currently not compatible with `rho`!=0 !*}
-
-\item{etaAR}{numeric (scalar), value between 0 and 1. Defaults to NULL.
-If `etaAR` is not NULL, the random slope `eta` is AR1-correlated.
+\item{AR}{numeric, vector containing up to three values, each between 0 and 1.
+Defaults to NULL. It defines the AR(1)-correlation of random effects.
+The first element corresponds to the cluster intercept, the second to the
+treatment effect and the third to subject specific intercept.
+If only one element is provided, autocorrelation of all random effects is
+assumed to be the same.
 *Currently not compatible with `rho`!=0 !*}
 
 \item{rho}{numeric (scalar), correlation of `tau` and `eta`}
@@ -54,11 +52,12 @@ Leads to a closed cohort setting}
 
 \item{N}{numeric, number of individuals per cluster. Either a scalar, vector
 of length #Clusters or a matrix of dimension #Clusters x timepoints.
-Defaults to 'rep(1,sum(Cl))' if not passed.}
+Defaults to 1 if not passed.}
 
 \item{CovMat}{numeric, a positive-semidefinite matrix with
 (#Clusters \eqn{\cdot} timepoints) rows and columns. If `CovMat` is given,
-`sigma`, `tau`, `eta`, `rho` and `psi` are ignored.}
+`sigma`, `tau`, `eta`, `rho`, `gamma` and `psi` as well as `alpha_0_1_2`
+must be NULL.}
 
 \item{dfAdjust}{character, one of the following: "none","between-within",
 "containment", "residual".}
@@ -79,8 +78,10 @@ parameters of the specific setting is returned.
 If requested (by `verbose`=2) this list also contains relevant matrices.
 }
 \description{
-This function calls `construct_DesMat` and `construct_CovMat` to
-construct the design and covariance matrix, repectively. These matrices are
+This function is not intended to be used directly, but rather to be called
+by `wlsPower` - the main function of this package.
+It expects the design matrix as an input argument `DesMat` and
+construct the covariance matrix (if not given as well). These matrices are
 used to calculate the variance of the treatment effect estimator which is
 then used to calculate the power to detect the assumed treatment effect.
 }

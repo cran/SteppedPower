@@ -2,9 +2,9 @@
 title: "Getting Started with `SteppedPower`"
 author:
 - name: Philipp Mildenberger^[pmildenb@uni-mainz.de]
-  affiliation: Institute of Medical Biostatistics, Epidemiology and Informatics ([IMBEI, Mainz](https://www.unimedizin-mainz.de/imbei/imbei/welcome-page.html?L=1))
+  affiliation: Institute of Medical Biostatistics, Epidemiology and Informatics ([IMBEI, Mainz](https://www.unimedizin-mainz.de/imbei/imbei/welcome-page))
 - name: Federico Marini^[marinif@uni-mainz.de]
-  affiliation: Institute of Medical Biostatistics, Epidemiology and Informatics ([IMBEI, Mainz](https://www.unimedizin-mainz.de/imbei/imbei/welcome-page.html?L=1))
+  affiliation: Institute of Medical Biostatistics, Epidemiology and Informatics ([IMBEI, Mainz](https://www.unimedizin-mainz.de/imbei/imbei/welcome-page))
 date: "`r Sys.Date()`"
 output: 
   rmarkdown::html_vignette:
@@ -27,6 +27,7 @@ knitr::opts_chunk$set(
 library(knitr)
 library(SteppedPower)
 library(Matrix)
+library(plotly)
 ```
 
 # About `SteppedPower`
@@ -40,13 +41,13 @@ crossover designs. Further design types can be
 easily defined by the user.  
 
 Currently, normal outcomes and binomial outcomes with 
-logit link are implemented. 
+identity link are implemented. 
 The following random effects can be specified:
 random cluster intercept, random treatment effect, 
 random subject specific intercept and random time effect.
 The covariance structure can be compound symmetry or autoregressive.
 
-This code is modularised in order to be flexible and easy to use 
+This package is modularised in order to be flexible and easy to use 
 (and hopefully to maintain as well). 
 At the same time, the use of sparse matrix classes of the `matrix` 
 package makes computation of large designs feasible. 
@@ -54,23 +55,23 @@ package makes computation of large designs feasible.
 # Methods and Notation
 
 A common approach to model the correlation in 
-longitudinal studies are random effects.[@hussey2007design; @li2020mixed]
+longitudinal studies are random effects [@hussey2007design; @li2020mixed].
 Such a model has the form
 
-$$y_{ijk}= \mu_0 + \alpha_i + T_{ij} \theta + b_j + e_{ijk}$$ 
+$$y_{ijk}= \mu_0 + \pi_i + T_{ij} \theta + c_j + e_{ijk}$$ 
 
 with
 
 * $y_{ijk}$ the response in cluster $j$ at time $i$ for individual $k$
-* $\mu_0$ a overall mean (under control)
-* $\alpha_i$ the time trend at time $i$
+* $\mu_0$ an overall mean (under control)
+* $\pi_i$ the time trend at time $i$
 * $T_{ij}$ indicates the treatment status (0 = control, 1 = interventional treatment)
 * $\theta$ the treatment effect 
-* $b_j$ a random cluster effect for cluster $j$ with $b_j \sim N(0,\tau^2)$
+* $c_j$ a random cluster effect for cluster $j$ with $b_j \sim N(0,\tau^2)$
 * $e_{ijk}$ a normal random error term with $e_{ijk}\sim N(0,\sigma^2)$
 
 For power calculation, the standard deviation of random effects is assumed to be known.
-Lets define $\beta:=(\mu,\alpha',\theta)'$ and $\omega_{ijk}:=b_j+e_{ijk}$. 
+Let's define $\beta:=(\mu,\alpha',\theta)'$ and $\omega_{ijk}:=b_j+e_{ijk}$. 
 This leads to a compact and more general notation of the above equation:
 
 $$\begin{align}
@@ -95,18 +96,57 @@ that corresponds to $\hat\theta$.
 
 Extensions to the above formula implemented in this package are  
 
-* random treatment effect
-* autoregressive cluster effect
-* binomial outcomes with logit-link
 
 with leads to the following extended model formula:
 
-$$y_{ijk}= g\big( \mu + \alpha_i + X (\theta_{ij} + c_j) + b_j + e_{ijk}\big)$$ 
+$$y_{ijk}= \mu_0 + \pi_i + T (\theta_{ij} + d_j) + c_j + t_{ij} + s_{ijk} + e_{ijk}$$ 
 with  
 
-* $g(\cdot)$ a link function
-* $c_j$ a random treatment effect
-* $b_j$ and $c_j$ jointly distributed with $\left(\begin{smallmatrix} \tau^2 & \rho\tau\eta \\ \rho\tau\eta & \eta^2\end{smallmatrix}\right)$
+* $d_j$ a random treatment effect
+* $c_j$ and $d_j$ jointly distributed with $\left(\begin{smallmatrix} \tau^2 & \rho\tau\eta \\ \rho\tau\eta & \eta^2\end{smallmatrix}\right)$
+* $s_{ijk}$ a random subject specific effect
+* $t_{ij}$ a random time effect
+
+
+
+
+## Specification of the correlation structure
+
+
+<!-- The variances of the random effects define a correlation structure -->
+
+
+<!-- Besides to the random effect specification -->
+
+<!-- $\left(\operatorname{corr}\left(y_{i j k}, y_{i j k^{\prime}}\right)=\alpha_{0} \text { for } k \neq k^{\prime}\right)$  -->
+
+<!-- $\left(\operatorname{corr}\left(y_{i j k}, y_{i j^{\prime} k^{\prime}}\right)=\alpha_{1}\right. \text{ for } j \neq j^{\prime} \text{ for } k \neq k^{\prime}$  -->
+
+<!-- $\left(\operatorname{corr}\left(y_{i j k}, y_{i j^{\prime} k}\right)=\alpha_{2} \text { for } j \neq j^{\prime}\right)$ -->
+
+<!-- $$\begin{align} -->
+<!-- \sigma_M^2 &:= \tau^2+\gamma^2 + \psi^2 + \sigma^2   \\ -->
+<!-- \alpha_0 &:= \frac{\tau^2 + \gamma^2}{\sigma_M^2}  \\ -->
+<!-- \alpha_1 &:= \frac{\tau^2}{\sigma_M^2} \\ -->
+<!-- \alpha_2 &:= \frac{\tau^2 + \psi^2}{\sigma_M^2} -->
+<!-- \end{align}$$ -->
+
+A different approach to establish a covariance structure is to directly assume cluster cell correlation as proposed by \cite{Preisser2003integrated} and introduced to the context of stepped wedge designs in [@li2018sample]. They use $\boldsymbol{\alpha}:=(\alpha_0, \alpha_1, \alpha_2)$ where 
+		$\alpha_0:=\operatorname{corr}({y_{ijk},y_{ijk'}})$ for $ k\neq k'$ defines the within-period correlation; $\alpha_1:=\operatorname{corr}({y_{ijk},y_{ij'k'}})$ for $j\neq j', \, k\neq k'$ defines the inter-period correlation and $\alpha_0:=\operatorname{corr}({y_{ijk},y_{ij'k}})$ for $j\neq j'$ defines the within-individual correlation.
+		
+One receives an easily interpretable correlation matrix, albeit at the cost of some flexibility. We can translate $\boldsymbol{\alpha}$ into a representation with random effects, given a marginal variance $\sigma^2_{\text{marg}}$.
+		
+$$
+	\begin{align*}
+		\tau^2   		&:= {\sigma^2_{\text{marg}} \alpha_1} \\
+		\gamma^2 		&:= {\sigma^2_{\text{marg}} (\alpha_0-\alpha_1)} \\
+		\psi^2   	 	&:= {\sigma^2_{\text{marg}} (\alpha_2-\alpha_2)} \\
+		\sigma^2_{\text{res}} 	&:= {\sigma^2_{\text{marg}} (1-\alpha_0 - \alpha_2 + \alpha_1)}
+	\end{align*}
+$$ 
+
+Note that $\boldsymbol{\alpha}$ as defined above cannot specify a random treatment effect.
+
 
 # A quick tour
 
@@ -117,7 +157,7 @@ helpful to design non-standard user defined settings.
 
 `wlsPower` is essentially just a flexible wrapper for the function 
 `compute_wlsPower`, which does the actual computation.  
-`compute_wlsPower` then calls `constuct_DesMat` and `construct_CovMat`.
+`compute_wlsPower` then calls `construct_DesMat` and `construct_CovMat`.
 
 `construct_DesMat` builds the design matrix which consists of the treatment 
 status, usually built by`construct_trtMat` and the time adjustment, usually
@@ -137,7 +177,12 @@ to a block diagonal matrix.
 
 ## Plot Method
 
-In the weighted least squares setting, 
+The `plot.wlsPower` method makes up to three plots, visualising the influence 
+of cluster-periods, the treatment matrix $T$ and the covariance matrix 
+(selectable by `which=`). 
+
+By default, only the first plot is returned. It is constructed by exploiting the 
+approximation to a weighted least squares setting. Therefore, 
 the estimator $\hat \beta$ is a linear function of the data $y$
 
 $$\hat\beta = \underbrace{(X'\Omega^{-1}X)^{-1}(X'\Omega^{-1})}_{=:\text{M}}\cdot y$$
@@ -159,34 +204,38 @@ $\hat\theta$, but not for $\text{Var}(\hat\theta)$ !
 
 ```{r}
 wlsPwr <- wlsPower(Cl=c(3,2,3), mu0=0, mu1=1, sigma=1, tau=.5, verbose=2)
-plot(wlsPwr)
+plot(wlsPwr)[[1]] # (Accessing the first list element is needed to trigger plotting in an rmarkdown-environment) 
 ```
+
 
 ## Find Sample Size for given Power
 
-When the argument `Power` is passed to `wlsPower`, 
+When the argument `power` is passed to `wlsPower`, 
 the sample size needed is calculated, under the assumption of equally sized 
 clusters and periods. 
 
 ```{r}
-wlsPower(Cl=c(3,2,3), mu0=0, mu1=.2, sigma=1, tau=0, Power=.8)
+wlsPower(Cl=c(3,3,3), mu0=0, mu1=.2, sigma=1, tau=0, power=.8)
 ```
+
+So in this setting, you would need $50$ individuals per period in each cluster to 
+achieve a target power of $80%$
 
 # Use cases and examples
 
 ## Comparison of two groups -- Z-Test
 
 This might be a proof of concept rather than an example with 
-practical relevance, but let's to compare the mean in two groups. 
+practical relevance, but let's try to compare the mean in two groups. 
 For two groups of 10 observations each, the power of a Z-test 
 can be calculated as follows:
 
 ```{r}
-wlsPower(Cl=c(10,10), mu0=0,mu1=.6,sigma=1, tau=0, N=1, 
+wlsPower(Cl=c(10,10), mu0=0,mu1=1.2,sigma=1, tau=0, N=1, 
               dsntype="parallel", timepoints=1)
 
 ## the same:
-wlsPower(Cl=c(1,1), mu0=0,mu1=.6, sigma=1, tau=0, N=10,
+wlsPower(Cl=c(1,1), mu0=0,mu1=1.2, sigma=1, tau=0, N=10,
               dsntype="parallel", timepoints=1)
 ```
 
@@ -194,12 +243,12 @@ wlsPower(Cl=c(1,1), mu0=0,mu1=.6, sigma=1, tau=0, N=10,
 pwr::pwr.norm.test(.3,n=20)$power
 ```
 
->A quick Note on t-tests: It is much more challenging to use `SteppedPower` 
+>A quick note on t-tests: It is much more challenging to use `SteppedPower` 
 to reproduce settings in which the variance is assumed to be unknown, 
 most prominently the well known t-test.
 In this package, you find implemented some (experimental) heuristics 
 for guessing the denominator degrees of freedom, but they yield rather 
-scaled Wald tests than t tests. 
+scaled Wald tests than t-tests. 
 The main difference is that the distribution under 
 the alternative is assumed to be symmetric,
 whereas the t-test assumes a non-central (hence skewed) t-distribution.
@@ -224,47 +273,57 @@ the `Cl` argument, i.e. `Cl=c(4,4,4,0)`.
 ```{r, warning=FALSE}
 mod1 <- wlsPower(Cl=c(1,1,1,0), mu0=0, mu1=1, 
                  sigma=0.4, tau=0, verbose=2)
+```
 
+The treatment matrix is then stored under `mod1$DesignMatrix$trtMat`:
+```{r, echo=FALSE}
 knitr::kable(mod1$DesignMatrix$trtMat)
 ```
 
-## Autocorrelated cluster effects
+## Autocorrelated random effects
 
 In longitudinal studies, it can be sensible to assume that correlation within 
 clusters decreases with increasing time lag.
-The argument `tauAR` enables the user to specify a AR-1 correlation. `tauAR`
+The argument `AR` enables the user to specify a AR-1 correlation. `AR`
 must be any value between `0` and `1`. 
 The former corresponds to i.i.d. observations, 
 the latter to the usual compound symmetry covariance type.  
 
+Optionally, you can pass a vector of up to length three to `AR`. Then, the first element 
+applies to the cluster intercept, the second to the treatment effect (i.e. slope)
+and the third to the subject specific intercept. This is especially useful for 
+open cohort designs (see below).
+
 An example of a stepped wedge design with 8 clusters in 4 waves, 
-once with medium autocorrelation (`tauAR=0.6`) and 
-once with high autocorrelation (`tauAR=0.95`):
+once with medium autocorrelation (`AR=0.6`) and 
+once with high autocorrelation (`AR=0.95`):
 
 ```{r}
 mod2 <- wlsPower(Cl=c(2,2,2,2), mu0=0, mu1=1, 
-              sigma=1, N=100, tau=1, tauAR=.6, verbose=2)
+              sigma=1, N=100, tau=1, AR=.6, verbose=2)
 
 mod3 <- wlsPower(Cl=c(2,2,2,2), mu0=0, mu1=1, 
-              sigma=1, N=100, tau=1, tauAR=.95, verbose=2)
+              sigma=1, N=100, tau=1, AR=.95, verbose=2)
 ```
 
-For `tauAR=0.6`, the covariance matrix within one cluster then looks like this:
+For `AR=0.6`, the covariance matrix within one cluster then looks like this:
 
 ```{r, echo=FALSE}
 suppressWarnings(knitr::kable(as.matrix(mod2$CovarianceMatrix[1:5,1:5])))
 ```
 
-For `tauAR=0.95` it takes the following shape
+For `AR=0.95` it takes the following shape
 
 ```{r, echo=FALSE}
 suppressWarnings(knitr::kable(as.matrix(mod3$CovarianceMatrix[1:5,1:5])))
 rm(mod1,mod2,mod3)
 ```
 
+
 ## Unequal cluster sizes
 
 The argument `N` defines the cluster size. `N` can be 
+
 * a scalar, if all clusters have the same assumed size, 
   which is also constant over time
 * a vector, if the size differs between clusters but 
@@ -273,8 +332,9 @@ The argument `N` defines the cluster size. `N` can be
   a cluster or a wave of clusters and each column corresponds to a timepoint
 
 ```{r}
-mod4 <- wlsPower(Cl=c(1,1,1), mu0=0, mu1=1, N=c(1,3,10), tau=.5, verbose=2)
-plot(mod4)
+mod4 <- wlsPower(Cl=c(1,1,1), mu0=0, mu1=1, N=c(1,3,10), 
+                 sigma=1, tau=.5, verbose=2)
+plot(mod4)[[1]]
 ```
 
 ```{r, echo=FALSE}
@@ -288,7 +348,7 @@ Rather, clusters that switch early to the intervention
 are not observed until the end.
 Analogous, observation starts later in clusters 
 that switch towards the end of the study.
-This is sometimes called 'incomplete SWD' [hemming2015stepped].
+This is sometimes called 'incomplete SWD' [@hemming2015stepped].
 
 There are two ways to achieve this in `SteppedPower`, both by using the `incomplete` argument.
 One can either scalar, which then defines the number of observed periods before and 
@@ -346,7 +406,7 @@ clusters have a weight of exactly zero at the timepoints
 where they are not observed
 
 ```{r}
-plot(incompletePwr)
+plot(incompletePwr)[[1]]
 ```
 
 
@@ -367,20 +427,20 @@ For diagnostic purposes (or for bold users), some other adjustment options are
 implemented.
 
 ```{r}
-TimeAdj1 <- wlsPower(Cl=rep(2,4), mu0=0, mu1=1, tau=0, 
+TimeAdj1 <- wlsPower(Cl=rep(2,4), mu0=0, mu1=1, sigma=1, tau=0, 
                      timeAdjust="linear", verbose=2)
 
-TimeAdj2 <- wlsPower(Cl=rep(2,4), mu0=0, mu1=1, tau=0, 
+TimeAdj2 <- wlsPower(Cl=rep(2,4), mu0=0, mu1=1, sigma=1, tau=0, 
                      timeAdjust="factor", verbose=2)
 ```
 
 Design matrix of the first cluster with linear adjustment for secular trend:
-```{r}
+```{r, echo=FALSE}
 knitr::kable(head(TimeAdj1$DesignMatrix$dsnmatrix, 5))
 ```
 
 Design matrix of the first cluster with categorical adjustment for secular trend:
-```{r}
+```{r, echo=FALSE}
 knitr::kable(head(TimeAdj2$DesignMatrix$dsnmatrix, 5))
 ```
 
@@ -395,26 +455,143 @@ random subject (or subcluster) specific intercept.
   
 The power is calculated on aggregated cluster means:
 ```{r}
-Closed1 <- wlsPower(mu0=0, mu1=5, Cl=rep(3,3), sigma=5, tau=1, psi=2, gamma=1,
-                      N=3, verbose=2)
-a <- plot(Closed1$DesignMatrix)
+Closed1 <- wlsPower(mu0=0, mu1=5, Cl=rep(3,3), 
+                    sigma=5, tau=1, psi=3,
+                    N=3, verbose=2)
+Closed1
 ```
 
-With`INIDV_LVL=TRUE`, the calculation is done on the individual level. 
-This yields the same results but is far more comutationally expensive and is 
+With `INDIV_LVL=TRUE`, the calculation is done on the individual level. 
+This yields the same results but is far more computationally expensive and is 
 mainly intended for diagnostic purposes.
 
 ```{r}
-Closed2 <- wlsPower(mu0=0, mu1=5, Cl=rep(3,3), sigma=5, tau=1, psi=2, gamma=1,
-                      N=3, verbose=2, INDIV_LVL = TRUE)
-plot(Closed2)
+Closed2 <- wlsPower(mu0=0, mu1=5, Cl=rep(3,3), 
+                    sigma=5, tau=1, psi=3,
+                    N=3, verbose=2, INDIV_LVL = TRUE)
+Closed2
+plot(Closed2)[[1]]
+```
+
+```{r}
+Closed1$power - Closed2$power
+```
+
+
+## Open cohort designs 
+
+The `AR` argument mentioned above specifies the autocorrelation of random effects.
+It offers a convenient way to model open cohort designs. The third element of `AR` 
+can be seen as the estimated probability that a subject included in period $j$ 
+is also included in period $j+1$. 
+
+Expanding on the closed cohort example above, one could assume that subjects 
+have a 75% chance to reappear in the next study period. 
+```{r}
+Open1 <- wlsPower(mu0=0, mu1=5, Cl=rep(3,3), 
+                  sigma=5, tau=1, psi=3, AR=c(1,1,.75), N=3)
+
+Closed1$power
+Open1$power
+```
+So this would result in a power loss of roughly 
+`r round( Closed1$power - Open1$power,3)*100`% 
+compared to a closed cohort design in this case. 
+
+### Covariance structure for open cohort designs
+
+This proposed covariance structure is then a mixture of exchangeable (on cluster level) 
+and autoregressive (on subject level). Let's have a look at a toy example with
+three clusters, each consisting of three subjects. The probability that an 
+individual reappears in two consecutive periods is estimated to be 60%. 
+The covariance matrix (on subject level) could be visualised as follows:
+
+```{r, fig.height=6}
+Open2Indiv <- wlsPower(mu0=0, mu1=10, Cl=c(1,1,1,0), 
+                       sigma=1, tau=5, psi=10, AR=c(1,1,.60),
+                       N=3, verbose=2, INDIV_LVL=TRUE)
+
+plot(Open2Indiv, which=3)[[3]]
+```
+
+Note that you can zoom to get a better look at the structure. The autoregressive 
+structure on the subject level in the small boxes along the main diagonal and the 
+block exchangeable structure on cluster level becomes evident.
+
+## Reproducing common closed formulae
+
+
+There exist some formulae that do not need explicitly construct design and 
+covariance matrices, most notably [@kasza2020sample] and [@li2020design]. 
+Both include the one presented in [@hussey2007design] as a special case.
+
+These formulae are also implemented in `SteppedPower`. 
+As a showcase, here is an example that is loosely based 
+on the example in [@hussey2007design]:
+
+```{r}
+trtMat <- construct_DesMat(c(6,6,6,6))$trtMat
+mu0 <- 0.05 ; mu1 <- 0.032 ; N <- 100 
+
+tau <- .025 ; sigma <- sqrt(.041*.959) 
+gamma <- 0.01 ; psi <- .1 ; chi <- .5 ; AR <- .5
+```
+
+### Closed formula for proportional decay structure
+
+`VarClosed_Li` computes the treatment variance for stepped wedge designs with a 
+autoregressive (syn. proportional decay) structure. It can be used to compute 
+a variance for the treatment effect and thus the power for the setting in question:
+
+```{r}
+tmp <- VarClosed_Li(trtMat, tau=tau, psi=psi, N=N, AR=AR)
+tTestPwr(mu0-mu1, se=sqrt(tmp), df=Inf)
+```
+
+Explicit calculation yields the same:
+```{r}
+a <- SteppedPower::wlsPower(Cl=rep(6,4), mu0=mu0, mu1=mu1, AR=AR,
+                       sigma=0, tau=tau, N=N, psi=psi, verbose=2, INDIV_LVL = TRUE)
+a
+```
+
+
+### Closed formula for open cohort designs 
+
+Kasza et al. offer an extension to open cohort designs by the use of an attrition 
+or churn rate `chi` [@kasza2020sample]. It can be understood as the estimated probability 
+that a subject included in period $j$ 
+is also included in period $j'$ for $j\ne j'$. Note that this differs from the
+approach mentioned above, as it results in a mixture of exchangeable covariance matrices.
+
+Since it differs from the way `SteppedPower` intents to model open cohort designs, 
+it requires a bit of tinkering to reproduce the results of the closed formula with 
+this package. It can be done with the help of the random time effect (`gamma`).
+
+```{r}
+tmp <- VarClosed_Kasza(trtMat, sigma=sigma, tau=tau, gamma=gamma, psi=psi, N=N, chi=0)
+tTestPwr(mu0-mu1, se=sqrt(tmp), df = Inf)
+wlsPower(Cl = rep(6,4), N=N, mu0=mu0, mu1=mu1, verbose=0,
+         sigma=sigma, tau=tau, gamma=gamma, psi=psi)
+
+tmp <- VarClosed_Kasza(trtMat, sigma=sigma, tau=tau, gamma=gamma, psi=psi, N=N, chi=1)
+tTestPwr(mu0-mu1, sqrt(tmp), df = Inf)
+wlsPower(Cl = rep(6,4), N=N, mu0=mu0, mu1=mu1, verbose=0,
+         sigma=sigma, tau=tau, 
+         gamma=sqrt(gamma^2+psi^2/N), psi=0)
+
+tmp <- VarClosed_Kasza(trtMat, sigma=sigma, tau=tau, gamma=gamma, psi=psi, N=N, chi=chi)
+tTestPwr(mu0-mu1, sqrt(tmp), df = Inf)
+wlsPower(Cl = rep(6,4), N=N, mu0=mu0, mu1=mu1, verbose=0,
+         sigma=sigma, tau=tau, 
+         gamma=sqrt(gamma^2+chi*psi^2/N), psi=sqrt(1-chi)*psi)
 ```
 
 
 # Session Info {-}
 
-```{r}
-sessionInfo()
+```{r, echo=FALSE}
+print(sessionInfo(),locale=FALSE)
 ```
 
 # References {-}

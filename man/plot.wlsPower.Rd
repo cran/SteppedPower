@@ -4,17 +4,23 @@
 \alias{plot.wlsPower}
 \title{plot an object of class `wlsPower`}
 \usage{
-\method{plot}{wlsPower}(x, ...)
+\method{plot}{wlsPower}(x, which = 1, show_colorbars = NULL, ...)
 }
 \arguments{
 \item{x}{object of class wlsPower}
 
+\item{which}{Specify a subset of the numbers 1:3 to select plots}
+
+\item{show_colorbars}{logical, should the colorbars be shown?}
+
 \item{...}{Arguments to be passed to methods}
 }
 \value{
-a plotly html widget
+a list of plotly html widgets
 }
 \description{
-Plot a matrix that visualises the influence of each cluster for
-each timepoint
+Up to three plots (selectable by `which`) that visualise:
+influence of each cluster for each timepoint,
+the treatment status for each cluster for each timepoint and
+the covariance matrix. By default, only the first plot is returned.
 }

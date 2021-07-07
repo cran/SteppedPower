@@ -1,12 +1,13 @@
 #' @title Construct the Design Matrix
 #'
+#' @description
 #' Constructs the design matrix with one column for every (fixed)
 #' parameter to be estimated and one row for every cluster for every timepoint.
-#' This function calls `construct_trtMat` to construct a matrix with
-#' `#cluster` columns and `#timepoints` rows, indicating treatment status
-#' fore each cluster at each timepoint. This is then transformed into the first
+#' This function calls `construct_trtMat` to construct a matrix that indicates
+#' treatment status for each cluster at each timepoint.
+#' This is then transformed into the first
 #' column of the design matrix. `construct_CovMat` further calls
-#' `construct_timeajust` to get the fixed effect(s) of the timepoints.
+#' `construct_timeAdjust` to get the fixed effect(s) of the timepoints.
 #'
 #' Note: Unlike the usual notation, the treatment effect is in the first column
 #' (for easier access by higher level functions).
@@ -24,6 +25,13 @@
 #' @examples
 #' construct_DesMat(Cl=c(2,0,1))
 #' construct_DesMat(Cl=c(2,0,1), N=c(1,3,2))
+#'
+#' ## manually defined time adjustment (same as above)
+#' timeBlock <- matrix(c(1,0,0,0,
+#'                       1,1,0,0,
+#'                       1,0,1,0,
+#'                       1,0,0,1), 4, byrow=TRUE)
+#' construct_DesMat(Cl=c(2,0,1), timeBlk=timeBlock)
 #'
 construct_DesMat <- function(Cl          = NULL,
                              trtDelay    = NULL,
@@ -46,26 +54,30 @@ construct_DesMat <- function(Cl          = NULL,
 
   ## TREATMENT MATRIX ####
   if(!is.null(trtmatrix)){
-    trtMat  <- trtmatrix
+
+    if(inherits(trtmatrix,"matrix")){
+      trtMat  <- trtmatrix
+    }else if (inherits(trtMat, "list") & "swDsn" %in% names(trtmatrix)){
+      trtMat <- trtmatrix$swDsn
+    } else stop("trtmatrix must be a matrix. It is a ",class(trtMat))
+
     dsntype <- "userdefined"
-    if(inherits(trtMat,"matrix")){
-      timepoints  <- ncol(trtMat)
-      Cl          <- table(do.call(paste,split(trtMat,col(trtMat))))
-      tmpCl       <- Cl
-    }else stop("trtmatrix must be a matrix. It is a ",class(trtMat))
+    timepoints  <- ncol(trtMat)
+    Cl          <- table(do.call(paste,split(trtMat,col(trtMat))))
+    tmpCl       <- Cl
   }else{
     trtMat  <- construct_trtMat(Cl            =Cl,
                                 trtDelay      =trtDelay,
                                 dsntype       =dsntype,
                                 timepoints    =timepoints)
-    timepoints <- dim(trtMat)[2]  ## trtMat has good heuristics for guessing
+    timepoints <- dim(trtMat)[2]  ## construct_trtMat has good heuristics for guessing
                                   ## number of timepoints (if not provided)
   }
   if(INDIV_LVL)  tmpTrtMat <- trtMat[rep(seq_len(sum(Cl)),N),] else
                  tmpTrtMat <- trtMat
 
   ## TIME ADJUSTMENT ####
-  timeBlks <- construct_timeadjust(Cl          =tmpCl,
+  timeBlks <- construct_timeAdjust(Cl          =tmpCl,
                                   timepoints   =timepoints,
                                   timeAdjust   =timeAdjust,
                                   period       =period,
@@ -75,6 +87,7 @@ construct_DesMat <- function(Cl          = NULL,
 
   DesMat  <- list(dsnmatrix  = dsnmatrix,
                   timepoints = timepoints,
+                  trtDelay   = trtDelay,
                   Cl         = Cl,
                   N          = if(INDIV_LVL) N else NULL,
                   dsntype    = dsntype,
@@ -92,7 +105,7 @@ construct_DesMat <- function(Cl          = NULL,
 
 #'  print.DesMat
 #'
-#' @param x object of class DesMat
+#' @param x  An object of class `DesMat
 #' @param ... Arguments to be passed to methods
 #'
 #' @method print DesMat
@@ -103,17 +116,16 @@ construct_DesMat <- function(Cl          = NULL,
 #'
 print.DesMat <- function(x, ...){
 
-dsn_out <- switch (x$dsntype,
-                  "SWD"               = "stepped wedge" ,
-                  "parallel"          = "parallel",
-                  "parallel_baseline" = "parallel with baseline period(s)",
-                  "userdefined"       = "userdefined")
-
+  dsn_out <- switch (x$dsntype,
+                    "SWD"               = "stepped wedge" ,
+                    "parallel"          = "parallel",
+                    "parallel_baseline" = "parallel with baseline period(s)",
+                    "userdefined"       = "userdefined")
 
   message("Timepoints                         = ", x$timepoints,"\n",
           "Number of clusters per seqence     = ", paste(x$Cl, collapse= ", "))
   if(!is.null(x$N)){
-  message("Number of subclusters per cluster  = ", x$N)
+  message("Number of subclusters per cluster  = ", paste(x$N, collapse=", "))
   }
   message("Design type                        = ", dsn_out,"\n",
           "Time adjustment                    = ", x$timeAdjust, "\n",
@@ -125,9 +137,10 @@ dsn_out <- switch (x$dsntype,
 
 
 
-#' plot.DesMat
+#' @title plot.DesMat
 #'
-#' @param x d
+#' @param x An object of class `DesMat`
+#' @param show_colorbar logical, should the colorbar be shown?
 #' @param ... Arguments to be passed to methods
 #'
 #' @method plot DesMat
@@ -136,19 +149,21 @@ dsn_out <- switch (x$dsntype,
 #'
 #' @export
 #'
+#' @examples
+#' x <- construct_DesMat(C=c(2,2,2,0,2,2,2),.5)
 
-# x <- construct_DesMat(C=c(2,2,2,0,2,2,2),.5)
-plot.DesMat <- function(x, ...){
+plot.DesMat <- function(x, show_colorbar=FALSE, ...){
   trt <- x$trtMat
-  plot_ly(type="heatmap", colors=c("lightblue","red"),
-          x=~(seq_len(dim(trt)[1])-.5), y=~seq_len(dim(trt)[2]),
+  plot_ly(type="heatmap",
+          x=~(seq_len(dim(trt)[2])), y=~(seq_len(dim(trt)[1])),
           z=~trt, xgap=5, ygap=5, name=" ",
+          showscale=show_colorbar,
+          colors=grDevices::colorRamp(c("steelblue","lightgoldenrod1","firebrick")),
           hovertemplate="Time: %{x},   Cluster: %{y} \nTreatment Status: %{z}") %>%
-    layout(xaxis = list(title="time"),yaxis = list(title="cluster",
-                                                         autorange="reversed"))
+    layout(xaxis = list(title="time", type="category"),
+           yaxis = list(title="cluster",autorange="reversed",type="category")) %>%
+    colorbar(len=1, title="")
 }
-
-
 
 #' @title Construct Treatment Matrix
 #'
@@ -251,15 +266,16 @@ construct_trtMat <- function(Cl,
 
 #' @title Construct the time period adjustment in the design matrix
 #'
+#' @description Offers several options to adjust for secular trends.
 #'
 #' @inheritParams construct_DesMat
 #'
-#' @return a matrix with one row for every cluster at every timepoint and columns
+#' @return a matrix with one row for every cluster at every timepoint and number of columns
 #' depending of adjustment type.
 #'
 #' @export
 
-construct_timeadjust <- function(Cl,
+construct_timeAdjust <- function(Cl,
                                  timepoints,
                                  timeAdjust = "factor",
                                  period     = NULL,
@@ -277,14 +293,21 @@ construct_timeadjust <- function(Cl,
 
   timeBlks <- switch (timeAdjust,
     factor   = cbind(1,rbind(0,diag(timepoints-1))
-                     )[rep(seq_len(timepoints),SumCl),],
-    none     = matrix(rep(1,timepoints*SumCl)),
+                     )[rep(seq_len(timepoints),SumCl),]
+    ,
+    none     = matrix(rep(1,timepoints*SumCl))
+    ,
     linear   = cbind(rep(1,timepoints*SumCl),
-                     rep(seq_len(timepoints)/timepoints,SumCl)),
+                     rep(seq_len(timepoints)/timepoints,SumCl))
+    ,
     periodic = cbind(rep(1,timepoints),
                      sin(0:(timepoints-1)*(2*pi/period)),
                      cos(0:(timepoints-1)*(2*pi/period))
                      )[rep(seq_len(timepoints),SumCl),]
+    ,
+    quadratic= cbind(rep(1,timepoints*SumCl),
+                     rep(seq_len(timepoints)/timepoints,SumCl),
+                     rep(seq_len(timepoints)/timepoints,SumCl)^2)
   )
 
   return(timeBlks)

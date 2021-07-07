@@ -2,12 +2,7 @@
 % Please edit documentation in R/construct_CovMat.R
 \name{construct_CovMat}
 \alias{construct_CovMat}
-\title{Construct a Covariance Matrix
-
-constructs a (block diagonal) covariance matrix.
-This function calls `construct_CovBlk`
-(or `construct_CovSubMat` in case of repeated
-observations of the same individuals) for each block.}
+\title{Construct a Covariance Matrix}
 \usage{
 construct_CovMat(
   SumCl = NULL,
@@ -15,8 +10,7 @@ construct_CovMat(
   sigma,
   tau,
   eta = NULL,
-  tauAR = NULL,
-  etaAR = NULL,
+  AR = NULL,
   rho = NULL,
   gamma = NULL,
   trtMat = NULL,
@@ -40,12 +34,12 @@ Defaults to 1 for parallel designs.}
 \item{eta}{numeric (scalar or matrix), standard deviation of random slopes.
 If `eta` is given as scalar, `trtMat` is needed as well.}
 
-\item{tauAR}{numeric (scalar), value between 0 and 1. Defaults to NULL.
-If `tauAR` is not NULL, the random intercept `tau` is AR1-correlated.
-*Currently not compatible with `rho`!=0 !*}
-
-\item{etaAR}{numeric (scalar), value between 0 and 1. Defaults to NULL.
-If `etaAR` is not NULL, the random slope `eta` is AR1-correlated.
+\item{AR}{numeric, vector containing up to three values, each between 0 and 1.
+Defaults to NULL. It defines the AR(1)-correlation of random effects.
+The first element corresponds to the cluster intercept, the second to the
+treatment effect and the third to subject specific intercept.
+If only one element is provided, autocorrelation of all random effects is
+assumed to be the same.
 *Currently not compatible with `rho`!=0 !*}
 
 \item{rho}{numeric (scalar), correlation of `tau` and `eta`}
@@ -59,7 +53,7 @@ interventional treatment. Defaults to NULL. If trtMat is given, the arguments
 
 \item{N}{numeric, number of individuals per cluster. Either a scalar, vector
 of length #Clusters or a matrix of dimension #Clusters x timepoints.
-Defaults to 'rep(1,sum(Cl))' if not passed.}
+Defaults to 1 if not passed.}
 
 \item{CovBlk}{a matrix of dimension *timepoints* x *timepoints*.}
 
@@ -74,8 +68,6 @@ mainly for diagnostic purposes.}
 a covariance matrix
 }
 \description{
-Construct a Covariance Matrix
-
 constructs a (block diagonal) covariance matrix.
 This function calls `construct_CovBlk`
 (or `construct_CovSubMat` in case of repeated
@@ -89,11 +81,9 @@ construct_CovMat(SumCl=2, timepoints=3, sigma=3, tau=1)
 ##
 ##
 ## ... with random slope as AR-1 process
-construct_CovMat(SumCl=2, timepoints=3, sigma=3, tau=1, tauAR=.8)
+construct_CovMat(SumCl=2, timepoints=3, sigma=3, tau=1, AR=.8)
 ##
 ##
-
-
 ## ... with sigma and tau variing over time and between clusters:
 construct_CovMat(SumCl=2,timepoints=3,
                  sigma=matrix(c(1,2,2,1,1,2),nrow=2, byrow=TRUE),

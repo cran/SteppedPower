@@ -7,7 +7,7 @@
 \method{print}{DesMat}(x, ...)
 }
 \arguments{
-\item{x}{object of class DesMat}
+\item{x}{An object of class `DesMat}
 
 \item{...}{Arguments to be passed to methods}
 }

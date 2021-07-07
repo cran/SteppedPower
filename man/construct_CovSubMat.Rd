@@ -10,10 +10,9 @@ construct_CovSubMat(
   sigma,
   tau,
   eta = NULL,
-  tauAR = NULL,
-  etaAR = NULL,
+  AR = NULL,
   rho = NULL,
-  gamma = 0,
+  gamma = NULL,
   trtMat = NULL,
   psi = NULL,
   INDIV_LVL = FALSE
@@ -35,12 +34,12 @@ standard deviation of random intercepts}
 \item{eta}{numeric (vector of length `timepoints`),
 standard deviation of random slope}
 
-\item{tauAR}{numeric (scalar), value between 0 and 1. Defaults to NULL.
-If `tauAR` is not NULL, the random intercept `tau` is AR1-correlated.
-*Currently not compatible with `rho`!=0 !*}
-
-\item{etaAR}{numeric (scalar), value between 0 and 1. Defaults to NULL.
-If `etaAR` is not NULL, the random slope `eta` is AR1-correlated.
+\item{AR}{numeric, vector containing up to three values, each between 0 and 1.
+Defaults to NULL. It defines the AR(1)-correlation of random effects.
+The first element corresponds to the cluster intercept, the second to the
+treatment effect and the third to subject specific intercept.
+If only one element is provided, autocorrelation of all random effects is
+assumed to be the same.
 *Currently not compatible with `rho`!=0 !*}
 
 \item{rho}{numeric (scalar), correlation of `tau` and `eta`}

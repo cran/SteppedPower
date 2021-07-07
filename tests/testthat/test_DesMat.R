@@ -2,7 +2,7 @@
 
 ## construct_trtMat #####
 expect_equal(
-  construct_timeadjust(Cl=c(1,1,1), timepoints=2, "factor"),
+  construct_timeAdjust(Cl=c(1,1,1), timepoints=2, "factor"),
   matrix(c(rep(1,6),rep(0:1,3)),ncol=2)
 )
 

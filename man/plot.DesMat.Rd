@@ -4,10 +4,12 @@
 \alias{plot.DesMat}
 \title{plot.DesMat}
 \usage{
-\method{plot}{DesMat}(x, ...)
+\method{plot}{DesMat}(x, show_colorbar = FALSE, ...)
 }
 \arguments{
-\item{x}{d}
+\item{x}{An object of class `DesMat`}
+
+\item{show_colorbar}{logical, should the colorbar be shown?}
 
 \item{...}{Arguments to be passed to methods}
 }
@@ -16,4 +18,7 @@ a plotly html widget, displaying the treatment status
 }
 \description{
 plot.DesMat
+}
+\examples{
+x <- construct_DesMat(C=c(2,2,2,0,2,2,2),.5)
 }

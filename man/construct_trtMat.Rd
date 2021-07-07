@@ -11,8 +11,8 @@ construct_trtMat(Cl, trtDelay, dsntype, timepoints = NULL)
 or number in control and intervention (in parallel designs)}
 
 \item{trtDelay}{numeric (possibly vector), value(s)
-between 0 and 1 specifying
-the intervention effect in the first (second ... ) intervention phase}
+between 0 and 1 specifying the proportion of intervention effect
+in the first (second ... ) intervention phase.}
 
 \item{dsntype}{character, defines the type of design. Options are "SWD",
 "parallel" and "parallel_baseline", defaults to "SWD".}

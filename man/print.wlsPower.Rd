@@ -2,7 +2,7 @@
 % Please edit documentation in R/wlsPower.R
 \name{print.wlsPower}
 \alias{print.wlsPower}
-\title{print.wlsPower}
+\title{Print an object of class `wlsPower`}
 \usage{
 \method{print}{wlsPower}(x, ...)
 }
@@ -16,5 +16,5 @@ Messages, containing information about (at least) power and
 significance level
 }
 \description{
-print.wlsPower
+Print an object of class `wlsPower`
 }

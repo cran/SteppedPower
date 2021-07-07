@@ -2,7 +2,7 @@
 % Please edit documentation in R/wlsPower.R
 \name{wlsPower}
 \alias{wlsPower}
-\title{Compute power}
+\title{Compute power via weighted least squares}
 \usage{
 wlsPower(
   Cl = NULL,
@@ -16,17 +16,17 @@ wlsPower(
   mu0,
   mu1,
   marginal_mu = FALSE,
-  sigma = 1,
+  sigma = NULL,
   tau = NULL,
   eta = NULL,
-  tauAR = NULL,
+  AR = NULL,
   rho = NULL,
   gamma = NULL,
   psi = NULL,
   alpha_0_1_2 = NULL,
   CovMat = NULL,
   N = NULL,
-  Power = NULL,
+  power = NULL,
   family = "gaussian",
   N_range = c(1, 1000),
   sig.level = 0.05,
@@ -43,14 +43,15 @@ or number in control and intervention (in parallel designs)}
 If design is swd, timepoints defaults to length(Cl)+1.
 Defaults to 1 for parallel designs.}
 
-\item{DesMat}{matrix of dimension ... , if supplied,
+\item{DesMat}{Either an object of class `DesMat` or a matrix indicating the
+treatment status for each cluster at each timepoint. If supplied,
 `timepoints`,`Cl`,`trtDelay` are ignored.}
 
 \item{trtDelay}{numeric (possibly vector), value(s)
-between 0 and 1 specifying
-the intervention effect in the first (second ... ) intervention phase}
+between 0 and 1 specifying the proportion of intervention effect
+in the first (second ... ) intervention phase.}
 
-\item{incomplete}{integer, either a vector (only for SWD) or a matrix.
+\item{incomplete}{integer, either a scalar (only for SWD) or a matrix.
 A vector defines the number of periods before and after the switch from
 control to intervention that are observed. A matrix consists of 1's for
 observed clusterperiods and 0's for unobserved clusterperiods.}
@@ -72,7 +73,7 @@ Defaults to "factor".}
 Indicates whether mu0 and mu1 are to be interpreted as marginal prevalence
 under control  and under treatment, respectively, or whether they denote
 the prevalence conditional on random effects being 0
-(It defaults to the latter).}
+(It defaults to the latter). *(experimental!)*}
 
 \item{sigma}{numeric, residual error of cluster means if no N given.}
 
@@ -81,8 +82,12 @@ the prevalence conditional on random effects being 0
 \item{eta}{numeric (scalar or matrix), standard deviation of random slopes.
 If `eta` is given as scalar, `trtMat` is needed as well.}
 
-\item{tauAR}{numeric (scalar), value between 0 and 1. Defaults to NULL.
-If `tauAR` is not NULL, the random intercept `tau` is AR1-correlated.
+\item{AR}{numeric, vector containing up to three values, each between 0 and 1.
+Defaults to NULL. It defines the AR(1)-correlation of random effects.
+The first element corresponds to the cluster intercept, the second to the
+treatment effect and the third to subject specific intercept.
+If only one element is provided, autocorrelation of all random effects is
+assumed to be the same.
 *Currently not compatible with `rho`!=0 !*}
 
 \item{rho}{numeric (scalar), correlation of `tau` and `eta`}
@@ -92,26 +97,30 @@ If `tauAR` is not NULL, the random intercept `tau` is AR1-correlated.
 \item{psi}{numeric (scalar), random subject specific intercept.
 Leads to a closed cohort setting}
 
-\item{alpha_0_1_2}{numeric vector of length 3, that consists of
-alpha_0, alpha_1 and alpha_2. This is an alternative way to define
-the correlation structure, following Li et al. (2018).}
+\item{alpha_0_1_2}{numeric vector or list of length 2 or 3, that consists of
+alpha_0, alpha_1 and alpha_2. Can be used instead of random effects to define
+the correlation structure, following Li et al. (2018). When omitting alpha_2,
+this describes a cross-sectional design, where alpha_0 and alpha_1 define
+the intracluster correlation and cluster autocorrelation, respectively - as
+defined by Hooper et al. (2016).}
 
 \item{CovMat}{numeric, a positive-semidefinite matrix with
 (#Clusters \eqn{\cdot} timepoints) rows and columns. If `CovMat` is given,
-`sigma`, `tau`, `eta`, `rho` and `psi` are ignored.}
+`sigma`, `tau`, `eta`, `rho`, `gamma` and `psi` as well as `alpha_0_1_2`
+must be NULL.}
 
 \item{N}{numeric, number of individuals per cluster. Either a scalar, vector
 of length #Clusters or a matrix of dimension #Clusters x timepoints.
-Defaults to 'rep(1,sum(Cl))' if not passed.}
+Defaults to 1 if not passed.}
 
-\item{Power}{numeric, a specified target power.
+\item{power}{numeric, a specified target power.
 If supplied, the minimal `N` is returned.}
 
 \item{family}{character, distribution family. One of "gaussian", "binomial".
 Defaults to "gaussian"}
 
 \item{N_range}{numeric, vector specifying the lower and upper bound for `N`,
-ignored if `Power` is NULL.}
+ignored if `power` is NULL.}
 
 \item{sig.level}{numeric (scalar), significance level, defaults to 0.05}
 
@@ -155,8 +164,8 @@ estimated via weighted least squares (see also vignette 'Getting Started').
 wlsPower(mu0=0, mu1=1, Cl=rep(1,5), sigma=2, tau=0.33, N=10)
 ##
 ##
-## ... with auto-regressive cluster effect `tauAR=0.7`.
-wlsPower(mu0=0, mu1=1, Cl=rep(1,5), sigma=2, tau=0.33, tauAR=0.7, N=10)
+## ... with auto-regressive cluster effect `AR=0.7`.
+wlsPower(mu0=0, mu1=1, Cl=rep(1,5), sigma=2, tau=0.33, AR=0.7, N=10)
 ##
 ##
 ## ... with varying cluster size
@@ -205,11 +214,11 @@ mod_aggr$CovarianceMatrix[1:6,1:6] ; mod_indiv$CovarianceMatrix[1:60,1:60]
 ## stepped wedge design with 5 Clusters in 5 sequences, residual sd = 2,
 ## cluster effect sd = 0.33. How many Individuals are needed to achieve a
 ## power of 80\% ?
-wlsPower(mu0=0, mu1=1, Cl=rep(1,5), sigma=2, tau=0.33, Power=.8)
+wlsPower(mu0=0, mu1=1, Cl=rep(1,5), sigma=2, tau=0.33, power=.8)
 ##
 ## ... How many are needed if we have a closed cohort design with a random
 ## individuum effect of .7?
-wlsPower(mu0=0, mu1=1, Cl=rep(1,5), sigma=2, tau=0.33, psi=.7, Power=.8)
+wlsPower(mu0=0, mu1=1, Cl=rep(1,5), sigma=2, tau=0.33, psi=.7, power=.8)
 ##
 ##
 ## longitudinal parallel design, with 5 time periods, 3 clusters in treatment
@@ -240,7 +249,7 @@ wlsPower(mu0=0.5, mu1=0.25, Cl=rep(4,8), tau=0.5, N=1,
              family="binomial")
 ##
 ##
-## ... with  marginally defined incidences
+## ... with  marginally defined proportions
 wlsPower(mu0=0.5, mu1=0.25, Cl=rep(4,8), tau=0.5, N=1,
               family="binomial", marginal_mu=TRUE)
 
