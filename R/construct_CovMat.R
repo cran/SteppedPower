@@ -33,12 +33,14 @@ construct_CovBlk <- function(sigma,
 
   # AR         <- rep(AR, length.out=3) ## NEEDED ???
   timepoints <- length(sigma)
-  if(is.null(tau)) tau <- vector(mode="double", timepoints)
 
-  tauMat <- if(is.null(AR[[1]])) tau %o% tau
-            else tau %o% tau * toeplitz(AR[[1]] ** (0:(timepoints-1)))
-  out    <- diag(sigma^2, timepoints) + tauMat
+  out  <- diag(sigma^2, timepoints)
 
+  if(!is.null(tau)){
+    tauMat <- if(is.null(AR[[1]])) tau %o% tau
+              else tau %o% tau * toeplitz(AR[[1]] ** (0:(timepoints-1)))
+    out <- out + tauMat
+  }
   if(!is.null(eta)) {
     etaMat <- if(is.null(AR[[2]])) eta %o% eta
               else eta %o% eta * toeplitz(AR[[2]] ** (0:(timepoints-1)))
@@ -96,7 +98,7 @@ construct_CovSubMat <- function(N,
 
 
   if(INDIV_LVL){
-    SubMat <- construct_CovMat(SumCl      = N,
+    SubMat <- construct_CovMat(sumCl      = N,
                                timepoints = timepoints,
                                sigma      = sigma,
                                tau        = psi,
@@ -127,11 +129,11 @@ construct_CovSubMat <- function(N,
 #' @param timepoints numeric (scalar or vector), number of timepoints (periods).
 #' If design is swd, timepoints defaults to length(Cl)+1.
 #' Defaults to 1 for parallel designs.
-#' @param SumCl total number of clusters
+#' @param sumCl total number of clusters
 #' @param trtMat a matrix of dimension *#Cluster* x *timepoints* as produced by
 #' the function `construct_trtMat`, indicating the cluster-periods that receive
 #' interventional treatment. Defaults to NULL. If trtMat is given, the arguments
-#' `SumCl` and `timepoints` are ignored (!).
+#' `sumCl` and `timepoints` are ignored (!).
 #' @param CovBlk a matrix of dimension *timepoints* x *timepoints*.
 #'
 #' @return a covariance matrix
@@ -141,15 +143,15 @@ construct_CovSubMat <- function(N,
 #'
 #' ## Two clusters, three timepoints,
 #' ## residual standard error sd=3, random slope sd=1.
-#' construct_CovMat(SumCl=2, timepoints=3, sigma=3, tau=1)
+#' construct_CovMat(sumCl=2, timepoints=3, sigma=3, tau=1)
 #' ##
 #' ##
 #' ## ... with random slope as AR-1 process
-#' construct_CovMat(SumCl=2, timepoints=3, sigma=3, tau=1, AR=.8)
+#' construct_CovMat(sumCl=2, timepoints=3, sigma=3, tau=1, AR=.8)
 #' ##
 #' ##
 #' ## ... with sigma and tau variing over time and between clusters:
-#' construct_CovMat(SumCl=2,timepoints=3,
+#' construct_CovMat(sumCl=2,timepoints=3,
 #'                  sigma=matrix(c(1,2,2,1,1,2),nrow=2, byrow=TRUE),
 #'                  tau=matrix(c(.2,.1,.1,.2,.2,.1),nrow=2, byrow=TRUE),
 #'                  N=c(3,4))
@@ -157,7 +159,7 @@ construct_CovSubMat <- function(N,
 
 
 
-construct_CovMat <- function(SumCl      = NULL,
+construct_CovMat <- function(sumCl      = NULL,
                              timepoints = NULL,
                              sigma,
                              tau,
@@ -173,10 +175,10 @@ construct_CovMat <- function(SumCl      = NULL,
   cross_sectional <- ifelse(is.null(psi), TRUE, ifelse(psi==0, TRUE, FALSE))
 
   if(!is.null(CovBlk)){
-    CovBlks <- rep(list(CovBlk),SumCl)
+    CovBlks <- rep(list(CovBlk),sumCl)
   } else {
     ## Checks ##
-    if(is.null(SumCl)      & !is.null(trtMat)) SumCl      <- nrow(trtMat)
+    if(is.null(sumCl)      & !is.null(trtMat)) sumCl      <- nrow(trtMat)
     if(is.null(timepoints) & !is.null(trtMat)) timepoints <- ncol(trtMat)
     timepoints  <- sum(timepoints)
 
@@ -184,35 +186,35 @@ construct_CovMat <- function(SumCl      = NULL,
       stop("In construct_CovMat: eta is needed if rho is not NULL")
 
     ## sigma ##
-    sigmaMat <- input_to_Mat(sigma, SumCl, timepoints)
+    sigmaMat <- input_to_Mat(sigma, sumCl, timepoints)
 
     ## N into sigma (aggregate on cluster means) ##
     if( cross_sectional & !INDIV_LVL){
       if(is.null(N)) N <- 1
-      NMat     <- input_to_Mat(N, SumCl, timepoints)
+      NMat     <- input_to_Mat(N, sumCl, timepoints)
       sigmaMat <- sigmaMat / sqrt(NMat)
     }
     ## sigma transformed to list ##
     sigmaLst <- split(sigmaMat,1:nrow(sigmaMat))
 
     ## tau (input can be scalar, vector or matrix) ##
-    tauLst <- input_to_List(tau, SumCl, timepoints)
+    tauLst <- input_to_List(tau, sumCl, timepoints)
 
     ## eta (input can be scalar or matrix, is passed as list of vectors) ##
     if(!is.null(eta)) {
       if(is.matrix(eta)){
-        if(nrow(eta)==SumCl & ncol(eta)==timepoints)
+        if(nrow(eta)==sumCl & ncol(eta)==timepoints)
           etaMat <- eta
         else stop("matrix dimensions of argument `eta` are ",
                   paste(dim(eta),collapse="x"), " but must be ",
-                  SumCl,"x",timepoints)
+                  sumCl,"x",timepoints)
       }else if(!is.null(trtMat) & length(eta)==1){
         etaMat <- trtMat * eta
       }else stop("If argument eta is a scalar, ",
                  "argument trtMat needs to be provided")
       etaLst <- split(etaMat, 1:nrow(etaMat))
     }else
-      etaLst <- vector("list", length=SumCl)
+      etaLst <- vector("list", length=sumCl)
 
     ## rho (input must be scalar, is passed as scalar) ##
     ## AR  (input must be scalar, is passed as scalar) ##
@@ -230,13 +232,13 @@ construct_CovMat <- function(SumCl      = NULL,
       CovMat       <- Matrix::bdiag(CovBlks)
 
       if(!is.null(gamma)) {
-        gammaMat     <- input_to_Mat(gamma, SumCl, timepoints)
+        gammaMat     <- input_to_Mat(gamma, sumCl, timepoints)
         diag(CovMat) <- Matrix::diag(CovMat) + as.numeric(t(gammaMat))^2
       }
     }else{
-      gammaLst <- input_to_List(gamma, SumCl, timepoints)
-      psiLst   <- input_to_List(psi, SumCl, timepoints)
-      NLst     <- input_to_List(N, SumCl, ifelse(INDIV_LVL, 1, timepoints))
+      gammaLst <- input_to_List(gamma, sumCl, timepoints)
+      psiLst   <- input_to_List(psi, sumCl, timepoints)
+      NLst     <- input_to_List(N, sumCl, ifelse(INDIV_LVL, 1, timepoints))
 
       CovBlks <- mapply(construct_CovSubMat,
                         sigma = sigmaLst,
@@ -267,19 +269,23 @@ construct_CovMat <- function(SumCl      = NULL,
 #' @return a plotly object
 #'
 
-plot_CovMat <- function(CovMat, show_colorbar=TRUE){
+plot_CovMat <- function(CovMat, show_colorbar=FALSE){
 
   CovMat    <- as.matrix(CovMat)
-  seqLength <- seq_len(dim(CovMat)[1])
+  CMcols    <- diag(CovMat!=Inf)
+
+  seqLength <- 1:(dim(CovMat)[1])
+  seqLength <- seqLength[CMcols]
+  gaps <- 20/dim(CovMat)[1]
 
   ## Work-around for incomplete designs, .. is there a nicer way?
-  tmpaux <- colSums(CovMat)==Inf
-  CovMat[tmpaux,] <- 0
-  CovMat[,tmpaux] <- 0
+  # tmpaux <- colSums(CovMat)==Inf
+  # CovMat[tmpaux,] <- 0
+  # CovMat[,tmpaux] <- 0
 
   plot_ly(type="heatmap", colors=c("white","steelblue"),
-          x=~seqLength, y=~seqLength, z=~CovMat,
-          xgap=1, ygap=1,
+          x=~seqLength, y=~seqLength, z=~CovMat[CMcols,CMcols],
+          xgap=gaps, ygap=gaps,
           showscale=show_colorbar) %>%
     layout(xaxis=list(title="", visible=FALSE),
            yaxis=list(title="", visible=FALSE, autorange="reversed") ) %>%

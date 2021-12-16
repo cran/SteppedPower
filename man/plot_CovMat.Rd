@@ -4,7 +4,7 @@
 \alias{plot_CovMat}
 \title{Visualise a Covariance Matrix}
 \usage{
-plot_CovMat(CovMat, show_colorbar = TRUE)
+plot_CovMat(CovMat, show_colorbar = FALSE)
 }
 \arguments{
 \item{CovMat}{A covariance matrix (possibly in sparse matrix notation)}

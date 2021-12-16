@@ -42,6 +42,7 @@ construct_DesMat <- function(Cl          = NULL,
                              trtmatrix   = NULL,
                              timeBlk     = NULL,
                              N           = NULL,
+                             incomplete  = NULL,
                              INDIV_LVL   = FALSE){
   if(INDIV_LVL){
     if(length(N)==1){
@@ -57,7 +58,7 @@ construct_DesMat <- function(Cl          = NULL,
 
     if(inherits(trtmatrix,"matrix")){
       trtMat  <- trtmatrix
-    }else if (inherits(trtMat, "list") & "swDsn" %in% names(trtmatrix)){
+    }else if (inherits(trtMat, "list") & "swDsn" %in% names(trtmatrix)){ ## to handle swCRTdesign::swDsn()
       trtMat <- trtmatrix$swDsn
     } else stop("trtmatrix must be a matrix. It is a ",class(trtMat))
 
@@ -85,6 +86,14 @@ construct_DesMat <- function(Cl          = NULL,
 
   dsnmatrix <- cbind(trt=as.numeric(t(tmpTrtMat)), timeBlks)
 
+  ## INCOMPLETE DESIGNS ####
+  if(!is.null(incomplete))
+    incompMat <- construct_incompMat(incomplete = incomplete,
+                                     dsntype    = dsntype,
+                                     timepoints = timepoints,
+                                     Cl         = Cl,
+                                     trtmatrix  = trtMat)
+
   DesMat  <- list(dsnmatrix  = dsnmatrix,
                   timepoints = timepoints,
                   trtDelay   = trtDelay,
@@ -94,7 +103,8 @@ construct_DesMat <- function(Cl          = NULL,
                   timeAdjust = ifelse(is.null(timeBlk),
                                       timeAdjust,
                                       "userdefined"),
-                  trtMat     = trtMat)
+                  trtMat     = trtMat,
+                  incompMat  = if(!is.null(incomplete)) incompMat else NULL)
   class(DesMat) <- append(class(DesMat),"DesMat")
 
   return(DesMat)
@@ -154,6 +164,9 @@ print.DesMat <- function(x, ...){
 
 plot.DesMat <- function(x, show_colorbar=FALSE, ...){
   trt <- x$trtMat
+  if(!is.null(x$incompMat))
+    trt[x$incompMat==0] <- NA
+
   plot_ly(type="heatmap",
           x=~(seq_len(dim(trt)[2])), y=~(seq_len(dim(trt)[1])),
           z=~trt, xgap=5, ygap=5, name=" ",
@@ -187,7 +200,7 @@ construct_trtMat <- function(Cl,
                              dsntype,
                              timepoints=NULL){
 
-  SumCl         <- sum(Cl)
+  sumCl         <- sum(Cl)
   lenCl         <- length(Cl)
 
   if(dsntype=="SWD"){
@@ -217,8 +230,8 @@ construct_trtMat <- function(Cl,
     if(length(timepoints)==1){
       timepoints01 <- c(1,timepoints-1)
       message(paste("assumes 1 baseline period and",timepoints-1,
-                    "parallel period(s). If intended otherwise,
-                    argument timepoints must have length two."))
+                    "parallel period(s). \nIf intended otherwise,",
+                    "argument timepoints must have length two.\n"))
     }else if(length(timepoints)==2){
       timepoints01 <- timepoints
       timepoints   <- sum(timepoints)
@@ -281,10 +294,10 @@ construct_timeAdjust <- function(Cl,
                                  period     = NULL,
                                  timeBlk    = NULL){
 
-  SumCl   <- sum(Cl)
+  sumCl   <- sum(Cl)
   if(!is.null(timeBlk)) {
     timepoints <- dim(timeBlk)[1]
-    timeBlks   <- timeBlk[rep(seq_len(timepoints),SumCl),]
+    timeBlks   <- timeBlk[rep(seq_len(timepoints),sumCl),]
     return(timeBlks)
   }
 
@@ -293,22 +306,68 @@ construct_timeAdjust <- function(Cl,
 
   timeBlks <- switch (timeAdjust,
     factor   = cbind(1,rbind(0,diag(timepoints-1))
-                     )[rep(seq_len(timepoints),SumCl),]
+                     )[rep(seq_len(timepoints),sumCl),]
     ,
-    none     = matrix(rep(1,timepoints*SumCl))
+    none     = matrix(rep(1,timepoints*sumCl))
     ,
-    linear   = cbind(rep(1,timepoints*SumCl),
-                     rep(seq_len(timepoints)/timepoints,SumCl))
+    linear   = cbind(rep(1,timepoints*sumCl),
+                     rep(seq_len(timepoints)/timepoints,sumCl))
     ,
     periodic = cbind(rep(1,timepoints),
                      sin(0:(timepoints-1)*(2*pi/period)),
                      cos(0:(timepoints-1)*(2*pi/period))
-                     )[rep(seq_len(timepoints),SumCl),]
+                     )[rep(seq_len(timepoints),sumCl),]
     ,
-    quadratic= cbind(rep(1,timepoints*SumCl),
-                     rep(seq_len(timepoints)/timepoints,SumCl),
-                     rep(seq_len(timepoints)/timepoints,SumCl)^2)
+    quadratic= cbind(rep(1,timepoints*sumCl),
+                     rep(seq_len(timepoints)/timepoints,sumCl),
+                     rep(seq_len(timepoints)/timepoints,sumCl)^2)
   )
 
   return(timeBlks)
+}
+
+#' @title Constructs a matrix of 0 and 1 for unobserved and observed cluster periods, respectively.
+#'
+#' @description Mostly useful to build incomplete stepped wedge designs
+#'
+#' @inheritParams construct_DesMat
+#' @return a matrix
+#' @export
+#'
+construct_incompMat <- function(incomplete,dsntype,timepoints,Cl,
+                                trtmatrix=NULL){
+  lenCl <- length(Cl)
+  sumCl <- sum(Cl)
+
+  if(is.vector(incomplete)){
+    if(dsntype !="SWD")
+      stop("scalar input for argument `incomplete` is only, ",
+           "applicable for dsntype = 'SWD'. ")
+    if(length(incomplete)!=1)
+      stop("incomplete cannot be a vector of length > 1.")
+    if(incomplete>timepoints) {
+      incomplete <- timepoints
+      warning("Argument `incomplete` must be less or equal to the number of",
+              "timepoints. `incomplete` is set to ", timepoints )
+    }
+    Toep <- toeplitz(c(rep(1,incomplete),rep(0,lenCl-incomplete)))
+    lastCols <- (timepoints-lenCl+1):timepoints
+
+    IM <- matrix(1,lenCl,timepoints)
+    IM[lower.tri(IM)]                       <- Toep[lower.tri(Toep)]
+    IM[,lastCols][upper.tri(IM[,lastCols])] <- Toep[upper.tri(Toep)]
+
+    IM <- IM[rep(seq_len(lenCl),Cl),]
+
+
+  }else if(is.matrix(incomplete)){
+    if(!nrow(incomplete) %in% c(lenCl,sumCl) | ncol(incomplete)!=timepoints)
+      stop("matrix dimensions of argument `incomplete` are ",
+           paste(dim(incomplete),collapse="x"), " but must be ",
+           paste(dim(trtmatrix),collapse="x"), " or ",
+           paste(dim(unique(trtmatrix)),collapse="x"))
+    IM <- incomplete
+    if(nrow(incomplete)==lenCl) IM <- IM[rep(seq_len(lenCl),Cl),]
+  }
+  return(IM)
 }

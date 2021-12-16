@@ -2,9 +2,9 @@
 title: "Getting Started with `SteppedPower`"
 author:
 - name: Philipp Mildenberger^[pmildenb@uni-mainz.de]
-  affiliation: Institute of Medical Biostatistics, Epidemiology and Informatics ([IMBEI, Mainz](https://www.unimedizin-mainz.de/imbei/imbei/welcome-page))
+  affiliation: Institute of Medical Biostatistics, Epidemiology and Informatics ([IMBEI, Mainz](https://www.unimedizin-mainz.de/imbei/imbei/welcome-page/))
 - name: Federico Marini^[marinif@uni-mainz.de]
-  affiliation: Institute of Medical Biostatistics, Epidemiology and Informatics ([IMBEI, Mainz](https://www.unimedizin-mainz.de/imbei/imbei/welcome-page))
+  affiliation: Institute of Medical Biostatistics, Epidemiology and Informatics ([IMBEI, Mainz](https://www.unimedizin-mainz.de/imbei/imbei/welcome-page/))
 date: "`r Sys.Date()`"
 output: 
   rmarkdown::html_vignette:
@@ -58,20 +58,19 @@ A common approach to model the correlation in
 longitudinal studies are random effects [@hussey2007design; @li2020mixed].
 Such a model has the form
 
-$$y_{ijk}= \mu_0 + \pi_i + T_{ij} \theta + c_j + e_{ijk}$$ 
+$$y_{ijk}= T_{ij} \theta + c_i + \mu_j + e_{ijk}$$ 
 
 with
 
-* $y_{ijk}$ the response in cluster $j$ at time $i$ for individual $k$
-* $\mu_0$ an overall mean (under control)
-* $\pi_i$ the time trend at time $i$
+* $y_{ijk}$ the response in cluster $i$ at time $j$ for individual $k$
+* $\mu_j$ the time trend at time $j$
 * $T_{ij}$ indicates the treatment status (0 = control, 1 = interventional treatment)
 * $\theta$ the treatment effect 
-* $c_j$ a random cluster effect for cluster $j$ with $b_j \sim N(0,\tau^2)$
+* $c_i$ a random cluster effect for cluster $i$ with $c_i \sim N(0,\tau^2)$
 * $e_{ijk}$ a normal random error term with $e_{ijk}\sim N(0,\sigma^2)$
 
 For power calculation, the standard deviation of random effects is assumed to be known.
-Let's define $\beta:=(\mu,\alpha',\theta)'$ and $\omega_{ijk}:=b_j+e_{ijk}$. 
+Let's define $\beta:=(\theta,\mu')'$ and $\omega_{ijk}:=c_i+e_{ijk}$. 
 This leads to a compact and more general notation of the above equation:
 
 $$\begin{align}
@@ -99,11 +98,11 @@ Extensions to the above formula implemented in this package are
 
 with leads to the following extended model formula:
 
-$$y_{ijk}= \mu_0 + \pi_i + T (\theta_{ij} + d_j) + c_j + t_{ij} + s_{ijk} + e_{ijk}$$ 
+$$y_{ijk}= T (\theta_{ij} + d_i) + c_i + \mu_j + t_{ij} + s_{ijk} + e_{ijk}$$ 
 with  
 
-* $d_j$ a random treatment effect
-* $c_j$ and $d_j$ jointly distributed with $\left(\begin{smallmatrix} \tau^2 & \rho\tau\eta \\ \rho\tau\eta & \eta^2\end{smallmatrix}\right)$
+* $d_i$ a random treatment effect
+* $c_i$ and $d_i$ jointly distributed with $\left(\begin{smallmatrix} \tau^2 & \rho\tau\eta \\ \rho\tau\eta & \eta^2\end{smallmatrix}\right)$
 * $s_{ijk}$ a random subject specific effect
 * $t_{ij}$ a random time effect
 
@@ -177,20 +176,23 @@ to a block diagonal matrix.
 
 ## Plot Method
 
-The `plot.wlsPower` method makes up to three plots, visualising the influence 
-of cluster-periods, the treatment matrix $T$ and the covariance matrix 
+The `plot.wlsPower` method makes up to four plots, visualising the influence 
+of cluster-period cells, the information content of cluster-period cells, 
+the treatment matrix $T$ and the covariance matrix 
 (selectable by `which=`). 
 
-By default, only the first plot is returned. It is constructed by exploiting the 
+By default, only the first plot is returned. The information content is also
+plotted if it the object to be plotted contains the corresponding matrix 
+(which is usually the case). It is constructed by exploiting the 
 approximation to a weighted least squares setting. Therefore, 
 the estimator $\hat \beta$ is a linear function of the data $y$
 
 $$\hat\beta = \underbrace{(X'\Omega^{-1}X)^{-1}(X'\Omega^{-1})}_{=:\text{M}}\cdot y$$
 
 with $X$ the design matrix and $\Omega$ the covariance matrix as above.
-The matrix $M$ gives an impression of the importance of clusters and 
+The matrix $H$ gives an impression of the importance of clusters and 
 time periods with regard to the estimated coefficients $\hat\beta$. 
-The first row of $M$ corresponds to the coefficient of the treatment status, 
+The first row of $H$ corresponds to the coefficient of the treatment status, 
 i.e. the treatment effect.  
 The `plot.wlsPower` method visualises this first row of $M$ as a matrix 
 where rows and columns correspond to clusters and time periods, respectively.
@@ -199,14 +201,23 @@ Furthermore, to give a rough comparison of importance between clusters
 (or between time periods), the sum of absolute weights per row (or per column) 
 is also shown. 
 
->CAVE: These are out-of-bag estimates for the influence of observations on 
-$\hat\theta$, but not for $\text{Var}(\hat\theta)$ !
 
 ```{r}
 wlsPwr <- wlsPower(Cl=c(3,2,3), mu0=0, mu1=1, sigma=1, tau=.5, verbose=2)
-plot(wlsPwr)[[1]] # (Accessing the first list element is needed to trigger plotting in an rmarkdown-environment) 
+plot(wlsPwr,which=1, show_colorbar=FALSE)$WgtPlot 
 ```
 
+The information content, as described in [@kasza2019information], looks like this:
+
+```{r}
+plot(wlsPwr,which=2, show_colorbar=FALSE)$ICplot
+```
+
+
+>CAVE: The influence plot (above) yields out-of-bag estimates for the influence of 
+observations on $\hat\theta$, but not for $\text{Var}(\hat\theta)$. 
+The information content (below) visualises the relative change in 
+$\text{Var}(\hat\theta)$ when one particular cluster period is omitted.
 
 ## Find Sample Size for given Power
 
@@ -219,7 +230,7 @@ wlsPower(Cl=c(3,3,3), mu0=0, mu1=.2, sigma=1, tau=0, power=.8)
 ```
 
 So in this setting, you would need $50$ individuals per period in each cluster to 
-achieve a target power of $80%$
+achieve a target power of $80\%$
 
 # Use cases and examples
 
@@ -232,15 +243,15 @@ can be calculated as follows:
 
 ```{r}
 wlsPower(Cl=c(10,10), mu0=0,mu1=1.2,sigma=1, tau=0, N=1, 
-              dsntype="parallel", timepoints=1)
+              dsntype="parallel", timepoints=1)$power
 
 ## the same:
 wlsPower(Cl=c(1,1), mu0=0,mu1=1.2, sigma=1, tau=0, N=10,
-              dsntype="parallel", timepoints=1)
+              dsntype="parallel", timepoints=1)$power
 ```
 
 ```{r}
-pwr::pwr.norm.test(.3,n=20)$power
+pwr::pwr.norm.test(.6,n=20)$power
 ```
 
 >A quick note on t-tests: It is much more challenging to use `SteppedPower` 
@@ -262,6 +273,7 @@ wlsPower(Cl=c(10,10),timepoints=5,mu0=0,mu1=.25,
 wlsPower(Cl=c(10,10),timepoints=5,mu0=0,mu1=.25,
          sigma=.5,tau=.2,dsntype="parallel")
 ```
+
 
 ## Stepped Wedge designs with empty sequences (i.e. waves)
 
@@ -334,7 +346,7 @@ The argument `N` defines the cluster size. `N` can be
 ```{r}
 mod4 <- wlsPower(Cl=c(1,1,1), mu0=0, mu1=1, N=c(1,3,10), 
                  sigma=1, tau=.5, verbose=2)
-plot(mod4)[[1]]
+plot(mod4, which=2, show_colorbar=FALSE)$ICplot
 ```
 
 ```{r, echo=FALSE}
@@ -406,7 +418,7 @@ clusters have a weight of exactly zero at the timepoints
 where they are not observed
 
 ```{r}
-plot(incompletePwr)[[1]]
+plot(incompletePwr, show_colorbar=FALSE)$WgtPlot
 ```
 
 
@@ -470,7 +482,7 @@ Closed2 <- wlsPower(mu0=0, mu1=5, Cl=rep(3,3),
                     sigma=5, tau=1, psi=3,
                     N=3, verbose=2, INDIV_LVL = TRUE)
 Closed2
-plot(Closed2)[[1]]
+plot(Closed2, annotations=FALSE, show_colorbar=FALSE)$WgtPlot
 ```
 
 ```{r}
@@ -483,7 +495,7 @@ Closed1$power - Closed2$power
 The `AR` argument mentioned above specifies the autocorrelation of random effects.
 It offers a convenient way to model open cohort designs. The third element of `AR` 
 can be seen as the estimated probability that a subject included in period $j$ 
-is also included in period $j+1$. 
+is also included in period $j+1$, instead of being replaced by a new subject. 
 
 Expanding on the closed cohort example above, one could assume that subjects 
 have a 75% chance to reappear in the next study period. 
@@ -511,17 +523,17 @@ Open2Indiv <- wlsPower(mu0=0, mu1=10, Cl=c(1,1,1,0),
                        sigma=1, tau=5, psi=10, AR=c(1,1,.60),
                        N=3, verbose=2, INDIV_LVL=TRUE)
 
-plot(Open2Indiv, which=3)[[3]]
+plot(Open2Indiv, which=4, show_colorbar=FALSE)$CMplot
 ```
 
 Note that you can zoom to get a better look at the structure. The autoregressive 
 structure on the subject level in the small boxes along the main diagonal and the 
 block exchangeable structure on cluster level becomes evident.
 
+
 ## Reproducing common closed formulae
 
-
-There exist some formulae that do not need explicitly construct design and 
+There exist some formulae that do not explicitly construct design and 
 covariance matrices, most notably [@kasza2020sample] and [@li2020design]. 
 Both include the one presented in [@hussey2007design] as a special case.
 
@@ -551,7 +563,7 @@ tTestPwr(mu0-mu1, se=sqrt(tmp), df=Inf)
 Explicit calculation yields the same:
 ```{r}
 a <- SteppedPower::wlsPower(Cl=rep(6,4), mu0=mu0, mu1=mu1, AR=AR,
-                       sigma=0, tau=tau, N=N, psi=psi, verbose=2, INDIV_LVL = TRUE)
+                       sigma=0, tau=tau, N=N, psi=psi, verbose=1, INDIV_LVL = TRUE)
 a
 ```
 

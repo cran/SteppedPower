@@ -5,7 +5,7 @@
 \title{Construct a Covariance Matrix}
 \usage{
 construct_CovMat(
-  SumCl = NULL,
+  sumCl = NULL,
   timepoints = NULL,
   sigma,
   tau,
@@ -21,7 +21,7 @@ construct_CovMat(
 )
 }
 \arguments{
-\item{SumCl}{total number of clusters}
+\item{sumCl}{total number of clusters}
 
 \item{timepoints}{numeric (scalar or vector), number of timepoints (periods).
 If design is swd, timepoints defaults to length(Cl)+1.
@@ -42,14 +42,14 @@ If only one element is provided, autocorrelation of all random effects is
 assumed to be the same.
 *Currently not compatible with `rho`!=0 !*}
 
-\item{rho}{numeric (scalar), correlation of `tau` and `eta`}
+\item{rho}{numeric (scalar), correlation of `tau` and `eta`. The default is no correlation.}
 
 \item{gamma}{numeric (scalar), random time effect}
 
 \item{trtMat}{a matrix of dimension *#Cluster* x *timepoints* as produced by
 the function `construct_trtMat`, indicating the cluster-periods that receive
 interventional treatment. Defaults to NULL. If trtMat is given, the arguments
-`SumCl` and `timepoints` are ignored (!).}
+`sumCl` and `timepoints` are ignored (!).}
 
 \item{N}{numeric, number of individuals per cluster. Either a scalar, vector
 of length #Clusters or a matrix of dimension #Clusters x timepoints.
@@ -77,15 +77,15 @@ observations of the same individuals) for each block.
 
 ## Two clusters, three timepoints,
 ## residual standard error sd=3, random slope sd=1.
-construct_CovMat(SumCl=2, timepoints=3, sigma=3, tau=1)
+construct_CovMat(sumCl=2, timepoints=3, sigma=3, tau=1)
 ##
 ##
 ## ... with random slope as AR-1 process
-construct_CovMat(SumCl=2, timepoints=3, sigma=3, tau=1, AR=.8)
+construct_CovMat(sumCl=2, timepoints=3, sigma=3, tau=1, AR=.8)
 ##
 ##
 ## ... with sigma and tau variing over time and between clusters:
-construct_CovMat(SumCl=2,timepoints=3,
+construct_CovMat(sumCl=2,timepoints=3,
                  sigma=matrix(c(1,2,2,1,1,2),nrow=2, byrow=TRUE),
                  tau=matrix(c(.2,.1,.1,.2,.2,.1),nrow=2, byrow=TRUE),
                  N=c(3,4))

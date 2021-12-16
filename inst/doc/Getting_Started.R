@@ -12,21 +12,24 @@ library(plotly)
 
 ## -----------------------------------------------------------------------------
 wlsPwr <- wlsPower(Cl=c(3,2,3), mu0=0, mu1=1, sigma=1, tau=.5, verbose=2)
-plot(wlsPwr)[[1]] # (Accessing the first list element is needed to trigger plotting in an rmarkdown-environment) 
+plot(wlsPwr,which=1, show_colorbar=FALSE)$WgtPlot 
+
+## -----------------------------------------------------------------------------
+plot(wlsPwr,which=2, show_colorbar=FALSE)$ICplot
 
 ## -----------------------------------------------------------------------------
 wlsPower(Cl=c(3,3,3), mu0=0, mu1=.2, sigma=1, tau=0, power=.8)
 
 ## -----------------------------------------------------------------------------
 wlsPower(Cl=c(10,10), mu0=0,mu1=1.2,sigma=1, tau=0, N=1, 
-              dsntype="parallel", timepoints=1)
+              dsntype="parallel", timepoints=1)$power
 
 ## the same:
 wlsPower(Cl=c(1,1), mu0=0,mu1=1.2, sigma=1, tau=0, N=10,
-              dsntype="parallel", timepoints=1)
+              dsntype="parallel", timepoints=1)$power
 
 ## -----------------------------------------------------------------------------
-pwr::pwr.norm.test(.3,n=20)$power
+pwr::pwr.norm.test(.6,n=20)$power
 
 ## -----------------------------------------------------------------------------
 wlsPower(Cl=c(10,10),timepoints=5,mu0=0,mu1=.25,
@@ -59,7 +62,7 @@ rm(mod1,mod2,mod3)
 ## -----------------------------------------------------------------------------
 mod4 <- wlsPower(Cl=c(1,1,1), mu0=0, mu1=1, N=c(1,3,10), 
                  sigma=1, tau=.5, verbose=2)
-plot(mod4)[[1]]
+plot(mod4, which=2, show_colorbar=FALSE)$ICplot
 
 ## ---- echo=FALSE--------------------------------------------------------------
 rm(mod4)
@@ -90,7 +93,7 @@ all.equal(incompletePwr,incompletePwr1)
 all.equal(incompletePwr,incompletePwr2)
 
 ## -----------------------------------------------------------------------------
-plot(incompletePwr)[[1]]
+plot(incompletePwr, show_colorbar=FALSE)$WgtPlot
 
 ## ---- echo=FALSE--------------------------------------------------------------
 rm(incompletePwr,incompletePwr1,incompletePwr2,incompleteMat1,incompleteMat2)
@@ -119,7 +122,7 @@ Closed2 <- wlsPower(mu0=0, mu1=5, Cl=rep(3,3),
                     sigma=5, tau=1, psi=3,
                     N=3, verbose=2, INDIV_LVL = TRUE)
 Closed2
-plot(Closed2)[[1]]
+plot(Closed2, annotations=FALSE, show_colorbar=FALSE)$WgtPlot
 
 ## -----------------------------------------------------------------------------
 Closed1$power - Closed2$power
@@ -136,7 +139,7 @@ Open2Indiv <- wlsPower(mu0=0, mu1=10, Cl=c(1,1,1,0),
                        sigma=1, tau=5, psi=10, AR=c(1,1,.60),
                        N=3, verbose=2, INDIV_LVL=TRUE)
 
-plot(Open2Indiv, which=3)[[3]]
+plot(Open2Indiv, which=4, show_colorbar=FALSE)$CMplot
 
 ## -----------------------------------------------------------------------------
 trtMat <- construct_DesMat(c(6,6,6,6))$trtMat
@@ -151,7 +154,7 @@ tTestPwr(mu0-mu1, se=sqrt(tmp), df=Inf)
 
 ## -----------------------------------------------------------------------------
 a <- SteppedPower::wlsPower(Cl=rep(6,4), mu0=mu0, mu1=mu1, AR=AR,
-                       sigma=0, tau=tau, N=N, psi=psi, verbose=2, INDIV_LVL = TRUE)
+                       sigma=0, tau=tau, N=N, psi=psi, verbose=1, INDIV_LVL = TRUE)
 a
 
 ## -----------------------------------------------------------------------------

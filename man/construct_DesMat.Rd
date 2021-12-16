@@ -14,6 +14,7 @@ construct_DesMat(
   trtmatrix = NULL,
   timeBlk = NULL,
   N = NULL,
+  incomplete = NULL,
   INDIV_LVL = FALSE
 )
 }
@@ -48,6 +49,11 @@ Is repeated for every cluster.}
 \item{N}{numeric, number of individuals per cluster. Either a scalar, vector
 of length #Clusters or a matrix of dimension #Clusters x timepoints.
 Defaults to 1 if not passed.}
+
+\item{incomplete}{integer, either a scalar (only for SWD) or a matrix.
+A vector defines the number of periods before and after the switch from
+control to intervention that are observed. A matrix consists of 1's for
+observed clusterperiods and 0's for unobserved clusterperiods.}
 
 \item{INDIV_LVL}{logical, should the computation be conducted on an
 individual level? This leads to longer run time and is

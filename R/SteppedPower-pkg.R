@@ -11,8 +11,9 @@
 #' @import Matrix
 #' @importFrom grDevices colorRamp
 #' @importFrom utils adist
-#' @importFrom plotly colorbar config layout plot_ly plotly_empty subplot TeX
-#' "%>%"
+#' @importFrom plotly colorbar config layout plot_ly plotly_empty subplot
+#' "%>%" add_annotations
+#' @importFrom Rfast spdinv submatrix
 #'
 #' @author Philipp Mildenberger \email{pmildenb@@uni-mainz.de}
 #' @name SteppedPower-pkg
