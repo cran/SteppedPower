@@ -2,11 +2,12 @@
 % Please edit documentation in R/wlsPower.R
 \name{plot_InfoContent}
 \alias{plot_InfoContent}
-\title{plot the information content of a wls object}
+\title{plot the information content of a gls object}
 \usage{
 plot_InfoContent(
   IC,
   annotations = NULL,
+  annotation_size = NULL,
   show_colorbar = TRUE,
   marginal_plots = TRUE
 )
@@ -16,6 +17,8 @@ plot_InfoContent(
 
 \item{annotations}{logical, should the cell contributions be annotated in the Plot?}
 
+\item{annotation_size}{font size of annotation in influence plots}
+
 \item{show_colorbar}{logical, should the colorbars be shown?}
 
 \item{marginal_plots}{should the influence of whole periods, clusters also be plotted?}
@@ -24,5 +27,5 @@ plot_InfoContent(
 a plotly object
 }
 \description{
-plot the information content of a wls object
+plot the information content of a gls object
 }

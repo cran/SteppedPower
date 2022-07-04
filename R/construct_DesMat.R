@@ -12,7 +12,7 @@
 #' Note: Unlike the usual notation, the treatment effect is in the first column
 #' (for easier access by higher level functions).
 #'
-#' @inheritParams wlsPower
+#' @inheritParams glsPower
 #' @param trtmatrix an optional user defined matrix
 #' to define treatment allocation
 #' @param timeBlk an optional user defined matrix that defines

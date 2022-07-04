@@ -149,14 +149,14 @@ Note that $\boldsymbol{\alpha}$ as defined above cannot specify a random treatme
 
 # A quick tour
 
-For most users, the probably most important function is `wlsPower`. 
+For most users, the probably most important function is `glsPower`. 
 It calls several auxiliary functions which will be shortly discussed here.
 This section is not essential for the usage of `SteppedPower`, it might be
 helpful to design non-standard user defined settings. 
 
-`wlsPower` is essentially just a flexible wrapper for the function 
-`compute_wlsPower`, which does the actual computation.  
-`compute_wlsPower` then calls `construct_DesMat` and `construct_CovMat`.
+`glsPower` is essentially just a flexible wrapper for the function 
+`compute_glsPower`, which does the actual computation.  
+`compute_glsPower` then calls `construct_DesMat` and `construct_CovMat`.
 
 `construct_DesMat` builds the design matrix which consists of the treatment 
 status, usually built by`construct_trtMat` and the time adjustment, usually
@@ -176,7 +176,7 @@ to a block diagonal matrix.
 
 ## Plot Method
 
-The `plot.wlsPower` method makes up to four plots, visualising the influence 
+The `plot.glsPower` method makes up to four plots, visualising the influence 
 of cluster-period cells, the information content of cluster-period cells, 
 the treatment matrix $T$ and the covariance matrix 
 (selectable by `which=`). 
@@ -194,7 +194,7 @@ The matrix $H$ gives an impression of the importance of clusters and
 time periods with regard to the estimated coefficients $\hat\beta$. 
 The first row of $H$ corresponds to the coefficient of the treatment status, 
 i.e. the treatment effect.  
-The `plot.wlsPower` method visualises this first row of $M$ as a matrix 
+The `plot.glsPower` method visualises this first row of $M$ as a matrix 
 where rows and columns correspond to clusters and time periods, respectively.
 
 Furthermore, to give a rough comparison of importance between clusters 
@@ -203,14 +203,14 @@ is also shown.
 
 
 ```{r}
-wlsPwr <- wlsPower(Cl=c(3,2,3), mu0=0, mu1=1, sigma=1, tau=.5, verbose=2)
-plot(wlsPwr,which=1, show_colorbar=FALSE)$WgtPlot 
+glsPwr <- glsPower(Cl=c(3,2,3), mu0=0, mu1=1, sigma=1, tau=.5, verbose=2)
+plot(glsPwr,which=1, show_colorbar=FALSE)$WgtPlot 
 ```
 
 The information content, as described in [@kasza2019information], looks like this:
 
 ```{r}
-plot(wlsPwr,which=2, show_colorbar=FALSE)$ICplot
+plot(glsPwr,which=2, show_colorbar=FALSE)$ICplot
 ```
 
 
@@ -221,12 +221,12 @@ $\text{Var}(\hat\theta)$ when one particular cluster period is omitted.
 
 ## Find Sample Size for given Power
 
-When the argument `power` is passed to `wlsPower`, 
+When the argument `power` is passed to `glsPower`, 
 the sample size needed is calculated, under the assumption of equally sized 
 clusters and periods. 
 
 ```{r}
-wlsPower(Cl=c(3,3,3), mu0=0, mu1=.2, sigma=1, tau=0, power=.8)
+glsPower(Cl=c(3,3,3), mu0=0, mu1=.2, sigma=1, tau=0, power=.8)
 ```
 
 So in this setting, you would need $50$ individuals per period in each cluster to 
@@ -242,11 +242,11 @@ For two groups of 10 observations each, the power of a Z-test
 can be calculated as follows:
 
 ```{r}
-wlsPower(Cl=c(10,10), mu0=0,mu1=1.2,sigma=1, tau=0, N=1, 
+glsPower(Cl=c(10,10), mu0=0,mu1=1.2,sigma=1, tau=0, N=1, 
               dsntype="parallel", timepoints=1)$power
 
 ## the same:
-wlsPower(Cl=c(1,1), mu0=0,mu1=1.2, sigma=1, tau=0, N=10,
+glsPower(Cl=c(1,1), mu0=0,mu1=1.2, sigma=1, tau=0, N=10,
               dsntype="parallel", timepoints=1)$power
 ```
 
@@ -267,10 +267,10 @@ whereas the t-test assumes a non-central (hence skewed) t-distribution.
 ## Longitudinal study -- parallel groups
 
 ```{r}
-wlsPower(Cl=c(10,10),timepoints=5,mu0=0,mu1=.25,
+glsPower(Cl=c(10,10),timepoints=5,mu0=0,mu1=.25,
          sigma=.5,dsntype="parallel")
 
-wlsPower(Cl=c(10,10),timepoints=5,mu0=0,mu1=.25,
+glsPower(Cl=c(10,10),timepoints=5,mu0=0,mu1=.25,
          sigma=.5,tau=.2,dsntype="parallel")
 ```
 
@@ -283,7 +283,7 @@ are specified by inserting zeros into
 the `Cl` argument, i.e. `Cl=c(4,4,4,0)`.
 
 ```{r, warning=FALSE}
-mod1 <- wlsPower(Cl=c(1,1,1,0), mu0=0, mu1=1, 
+mod1 <- glsPower(Cl=c(1,1,1,0), mu0=0, mu1=1, 
                  sigma=0.4, tau=0, verbose=2)
 ```
 
@@ -311,10 +311,10 @@ once with medium autocorrelation (`AR=0.6`) and
 once with high autocorrelation (`AR=0.95`):
 
 ```{r}
-mod2 <- wlsPower(Cl=c(2,2,2,2), mu0=0, mu1=1, 
+mod2 <- glsPower(Cl=c(2,2,2,2), mu0=0, mu1=1, 
               sigma=1, N=100, tau=1, AR=.6, verbose=2)
 
-mod3 <- wlsPower(Cl=c(2,2,2,2), mu0=0, mu1=1, 
+mod3 <- glsPower(Cl=c(2,2,2,2), mu0=0, mu1=1, 
               sigma=1, N=100, tau=1, AR=.95, verbose=2)
 ```
 
@@ -344,7 +344,7 @@ The argument `N` defines the cluster size. `N` can be
   a cluster or a wave of clusters and each column corresponds to a timepoint
 
 ```{r}
-mod4 <- wlsPower(Cl=c(1,1,1), mu0=0, mu1=1, N=c(1,3,10), 
+mod4 <- glsPower(Cl=c(1,1,1), mu0=0, mu1=1, N=c(1,3,10), 
                  sigma=1, tau=.5, verbose=2)
 plot(mod4, which=2, show_colorbar=FALSE)$ICplot
 ```
@@ -371,7 +371,7 @@ in four sequences (i.e. five timepoints),
 and we observe two timepoints before and after the switch, then we receive
 
 ```{r}
-incompletePwr <- wlsPower(Cl=rep(2,4), sigma=2, tau=.6, mu0=0,mu1=.5, N=80, 
+incompletePwr <- glsPower(Cl=rep(2,4), sigma=2, tau=.6, mu0=0,mu1=.5, N=80, 
                              incomplete=2, verbose=2)
 incompletePwr
 ```
@@ -404,9 +404,9 @@ suppressWarnings(knitr::kable(incompleteMat2))
 Now all that's left to do is to plug that into the main function:
 
 ```{r}
-incompletePwr1 <- wlsPower(Cl=rep(2,4), sigma=2, tau=.6, mu0=0, mu1=.5, N=80, 
+incompletePwr1 <- glsPower(Cl=rep(2,4), sigma=2, tau=.6, mu0=0, mu1=.5, N=80, 
                         incomplete=incompleteMat1, verbose=2)
-incompletePwr2 <- wlsPower(Cl=rep(2,4), sigma=2, tau=.6, mu0=0, mu1=.5, N=80, 
+incompletePwr2 <- glsPower(Cl=rep(2,4), sigma=2, tau=.6, mu0=0, mu1=.5, N=80, 
                         incomplete=incompleteMat2, verbose=2)
 
 all.equal(incompletePwr,incompletePwr1)
@@ -439,10 +439,10 @@ For diagnostic purposes (or for bold users), some other adjustment options are
 implemented.
 
 ```{r}
-TimeAdj1 <- wlsPower(Cl=rep(2,4), mu0=0, mu1=1, sigma=1, tau=0, 
+TimeAdj1 <- glsPower(Cl=rep(2,4), mu0=0, mu1=1, sigma=1, tau=0, 
                      timeAdjust="linear", verbose=2)
 
-TimeAdj2 <- wlsPower(Cl=rep(2,4), mu0=0, mu1=1, sigma=1, tau=0, 
+TimeAdj2 <- glsPower(Cl=rep(2,4), mu0=0, mu1=1, sigma=1, tau=0, 
                      timeAdjust="factor", verbose=2)
 ```
 
@@ -467,7 +467,7 @@ random subject (or subcluster) specific intercept.
   
 The power is calculated on aggregated cluster means:
 ```{r}
-Closed1 <- wlsPower(mu0=0, mu1=5, Cl=rep(3,3), 
+Closed1 <- glsPower(mu0=0, mu1=5, Cl=rep(3,3), 
                     sigma=5, tau=1, psi=3,
                     N=3, verbose=2)
 Closed1
@@ -478,7 +478,7 @@ This yields the same results but is far more computationally expensive and is
 mainly intended for diagnostic purposes.
 
 ```{r}
-Closed2 <- wlsPower(mu0=0, mu1=5, Cl=rep(3,3), 
+Closed2 <- glsPower(mu0=0, mu1=5, Cl=rep(3,3), 
                     sigma=5, tau=1, psi=3,
                     N=3, verbose=2, INDIV_LVL = TRUE)
 Closed2
@@ -500,7 +500,7 @@ is also included in period $j+1$, instead of being replaced by a new subject.
 Expanding on the closed cohort example above, one could assume that subjects 
 have a 75% chance to reappear in the next study period. 
 ```{r}
-Open1 <- wlsPower(mu0=0, mu1=5, Cl=rep(3,3), 
+Open1 <- glsPower(mu0=0, mu1=5, Cl=rep(3,3), 
                   sigma=5, tau=1, psi=3, AR=c(1,1,.75), N=3)
 
 Closed1$power
@@ -519,7 +519,7 @@ individual reappears in two consecutive periods is estimated to be 60%.
 The covariance matrix (on subject level) could be visualised as follows:
 
 ```{r, fig.height=6}
-Open2Indiv <- wlsPower(mu0=0, mu1=10, Cl=c(1,1,1,0), 
+Open2Indiv <- glsPower(mu0=0, mu1=10, Cl=c(1,1,1,0), 
                        sigma=1, tau=5, psi=10, AR=c(1,1,.60),
                        N=3, verbose=2, INDIV_LVL=TRUE)
 
@@ -562,7 +562,7 @@ tTestPwr(mu0-mu1, se=sqrt(tmp), df=Inf)
 
 Explicit calculation yields the same:
 ```{r}
-a <- SteppedPower::wlsPower(Cl=rep(6,4), mu0=mu0, mu1=mu1, AR=AR,
+a <- SteppedPower::glsPower(Cl=rep(6,4), mu0=mu0, mu1=mu1, AR=AR,
                        sigma=0, tau=tau, N=N, psi=psi, verbose=1, INDIV_LVL = TRUE)
 a
 ```
@@ -583,18 +583,18 @@ this package. It can be done with the help of the random time effect (`gamma`).
 ```{r}
 tmp <- VarClosed_Kasza(trtMat, sigma=sigma, tau=tau, gamma=gamma, psi=psi, N=N, chi=0)
 tTestPwr(mu0-mu1, se=sqrt(tmp), df = Inf)
-wlsPower(Cl = rep(6,4), N=N, mu0=mu0, mu1=mu1, verbose=0,
+glsPower(Cl = rep(6,4), N=N, mu0=mu0, mu1=mu1, verbose=0,
          sigma=sigma, tau=tau, gamma=gamma, psi=psi)
 
 tmp <- VarClosed_Kasza(trtMat, sigma=sigma, tau=tau, gamma=gamma, psi=psi, N=N, chi=1)
 tTestPwr(mu0-mu1, sqrt(tmp), df = Inf)
-wlsPower(Cl = rep(6,4), N=N, mu0=mu0, mu1=mu1, verbose=0,
+glsPower(Cl = rep(6,4), N=N, mu0=mu0, mu1=mu1, verbose=0,
          sigma=sigma, tau=tau, 
          gamma=sqrt(gamma^2+psi^2/N), psi=0)
 
 tmp <- VarClosed_Kasza(trtMat, sigma=sigma, tau=tau, gamma=gamma, psi=psi, N=N, chi=chi)
 tTestPwr(mu0-mu1, sqrt(tmp), df = Inf)
-wlsPower(Cl = rep(6,4), N=N, mu0=mu0, mu1=mu1, verbose=0,
+glsPower(Cl = rep(6,4), N=N, mu0=mu0, mu1=mu1, verbose=0,
          sigma=sigma, tau=tau, 
          gamma=sqrt(gamma^2+chi*psi^2/N), psi=sqrt(1-chi)*psi)
 ```

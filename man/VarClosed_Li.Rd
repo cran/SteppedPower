@@ -31,6 +31,6 @@ trtMat <- construct_DesMat(c(6,6,6,6))$trtMat
 tau <- .025 ; N <- 100 ; psi <- .1 ; AR <- .6
 tmp <- VarClosed_Li(trtMat, tau=tau, psi=psi, N=N, AR=AR)
 tTestPwr((.05-.032), se=sqrt(tmp), Inf)
-wlsPower(Cl=rep(6,4), mu0=.05, mu1=.032, AR=AR,
+glsPower(Cl=rep(6,4), mu0=.05, mu1=.032, AR=AR,
          tau=tau, N=N, sigma=0, psi=psi, verbose=0)
 }

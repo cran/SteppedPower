@@ -2,19 +2,22 @@
 % Please edit documentation in R/wlsPower.R
 \name{plot_CellWeights}
 \alias{plot_CellWeights}
-\title{plot cell contributions (weights) of a wls object}
+\title{plot cell contributions (weights) of a gls object}
 \usage{
 plot_CellWeights(
   x,
   annotations = NULL,
+  annotation_size = NULL,
   show_colorbar = TRUE,
   marginal_plots = TRUE
 )
 }
 \arguments{
-\item{x}{object of class wlsPower}
+\item{x}{object of class glsPower}
 
 \item{annotations}{logical, should the cell contributions be annotated in the Plot?}
+
+\item{annotation_size}{font size of annotation in influence plots}
 
 \item{show_colorbar}{logical, should the colorbars be shown?}
 
@@ -24,5 +27,5 @@ plot_CellWeights(
 a plotly html widget
 }
 \description{
-plot cell contributions (weights) of a wls object
+plot cell contributions (weights) of a gls object
 }

@@ -1,4 +1,18 @@
 
+
+# SteppedPower 0.3.2
+
+* The most noticeable change in this version is that the abbrevation `wls` 
+(weighted least squares) in function names is now replaced with `gls`
+(generalised least squars) to more properly reflect the scope of the functionality.
+For example, the function `wlsPower()` is now called `glsPower()` - although the
+former version still works and throws a warning. 
+* The closed formula for the computation of information content is now a dedicated formula, 
+called `compute_InfoContent()` 
+* In `plot.glsPower()` there now is an option to manually set the font size of the
+annotation in the influence plots
+
+
 # SteppedPower 0.3.1
 
 * The function `wlsPower()` now also computes the information content of 

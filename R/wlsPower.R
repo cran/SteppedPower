@@ -118,16 +118,16 @@
 #' ## cluster effect sd = 0.33, and 10 individuals per cluster.
 #' ## Further, let the mean under the null and alternative hypothesis 0 and 1,
 #' ## respectively.
-#' wlsPower(mu0=0, mu1=1, Cl=rep(1,5), sigma=2, tau=0.33, N=10)
+#' glsPower(mu0=0, mu1=1, Cl=rep(1,5), sigma=2, tau=0.33, N=10)
 #' ##
 #' ##
 #' ## ... with auto-regressive cluster effect `AR=0.7`.
-#' wlsPower(mu0=0, mu1=1, Cl=rep(1,5), sigma=2, tau=0.33, AR=0.7, N=10)
+#' glsPower(mu0=0, mu1=1, Cl=rep(1,5), sigma=2, tau=0.33, AR=0.7, N=10)
 #' ##
 #' ##
 #' ## ... with varying cluster size
-#' wlsPower(mu0=0, mu1=1, Cl=rep(1,5), sigma=2, tau=0.33, N=c(12,8,10,9,14))
-#' wlsPower(mu0=0, mu1=1, Cl=rep(1,5), sigma=2, tau=0.33,
+#' glsPower(mu0=0, mu1=1, Cl=rep(1,5), sigma=2, tau=0.33, N=c(12,8,10,9,14))
+#' glsPower(mu0=0, mu1=1, Cl=rep(1,5), sigma=2, tau=0.33,
 #'               N=matrix(c(12,8,10,9,14,
 #'                          11,8,10,9,13,
 #'                          11,7,11,8,12,
@@ -138,12 +138,12 @@
 #' ##
 #' ## ... with random treatment effect (with standard deviation 0.2),
 #' ## which is correlated with the cluster effect with `rho`=0.25.
-#' wlsPower(mu0=0, mu1=1, Cl=rep(1,5), sigma=2, tau=0.33, eta=.2, rho=.25, N=10)
+#' glsPower(mu0=0, mu1=1, Cl=rep(1,5), sigma=2, tau=0.33, eta=.2, rho=.25, N=10)
 #' ##
 #' ##
 #' ## ... with missing observations (a.k.a. incomplete stepped wedge design)
-#' wlsPower(mu0=0, mu1=1, Cl=rep(1,5), sigma=2, tau=0.33, N=10, incomplete=3)
-#' wlsPower(mu0=0, mu1=1, Cl=rep(1,5), sigma=2, tau=0.33, N=10,
+#' glsPower(mu0=0, mu1=1, Cl=rep(1,5), sigma=2, tau=0.33, N=10, incomplete=3)
+#' glsPower(mu0=0, mu1=1, Cl=rep(1,5), sigma=2, tau=0.33, N=10,
 #'              incomplete=matrix(c(1,1,1,0,0,
 #'                                  1,1,1,1,0,
 #'                                  1,1,1,1,1,
@@ -156,10 +156,10 @@
 #'## observed over the whole  study period
 #'## (often referred to as closed cohort design) or if subclusters exist
 #'## (such as wards within clinics). For
-#'mod_aggr  <- wlsPower(mu0=0, mu1=1, Cl=rep(1,5),
+#'mod_aggr  <- glsPower(mu0=0, mu1=1, Cl=rep(1,5),
 #'                           sigma=2, tau=0.33, psi=.25,
 #'                           N=10, incomplete=3, verbose=2)
-#'mod_indiv <- wlsPower(mu0=0, mu1=1, Cl=rep(1,5),
+#'mod_indiv <- glsPower(mu0=0, mu1=1, Cl=rep(1,5),
 #'                           sigma=2, tau=0.33, psi=.25,
 #'                           N=10, incomplete=3, verbose=2, INDIV_LVL=TRUE)
 #'mod_aggr
@@ -171,28 +171,28 @@
 #'## stepped wedge design with 5 Clusters in 5 sequences, residual sd = 2,
 #'## cluster effect sd = 0.33. How many Individuals are needed to achieve a
 #'## power of 80% ?
-#' wlsPower(mu0=0, mu1=1, Cl=rep(1,5), sigma=2, tau=0.33, power=.8)
+#' glsPower(mu0=0, mu1=1, Cl=rep(1,5), sigma=2, tau=0.33, power=.8)
 #'##
 #'## ... How many are needed if we have a closed cohort design with a random
 #'## individuum effect of .7?
-#' wlsPower(mu0=0, mu1=1, Cl=rep(1,5), sigma=2, tau=0.33, psi=.7, power=.8)
+#' glsPower(mu0=0, mu1=1, Cl=rep(1,5), sigma=2, tau=0.33, psi=.7, power=.8)
 #'##
 #'##
 #'## longitudinal parallel design, with 5 time periods, 3 clusters in treatment
 #'## and control arm each.
-#' wlsPower(mu0=0, mu1=1, Cl=c(3,3), sigma=2, tau=0.33, N=10,
+#' glsPower(mu0=0, mu1=1, Cl=c(3,3), sigma=2, tau=0.33, N=10,
 #'               dsntype="parallel", timepoints=5)
 #'##
 #'##
 #'##
 #'## ... with one baseline period and four parallel periods
-#' wlsPower(mu0=0, mu1=1, Cl=c(3,3), sigma=2, tau=0.33, N=10,
+#' glsPower(mu0=0, mu1=1, Cl=c(3,3), sigma=2, tau=0.33, N=10,
 #'               dsntype="parallel_baseline", timepoints=c(1,4))
 #'##
 #'##
 #'##
 #'## cross-over design with two timepoints before and two after the switch
-#' wlsPower(mu0=0, mu1=1, Cl=c(3,3), sigma=2, tau=0.33, N=10,
+#' glsPower(mu0=0, mu1=1, Cl=c(3,3), sigma=2, tau=0.33, N=10,
 #'               dsntype="crossover", timepoints=c(2,2))
 #'##
 #'##
@@ -202,12 +202,12 @@
 #'## cluster effect sd = 0.5 (ICC of 1/3 under control),
 #'## every individual is its own cluster.
 #'## ... with incidences defined conditional on cluster effect=0
-#'wlsPower(mu0=0.5, mu1=0.25, Cl=rep(4,8), tau=0.5, N=1,
+#'glsPower(mu0=0.5, mu1=0.25, Cl=rep(4,8), tau=0.5, N=1,
 #'              family="binomial")
 #'##
 #'##
 #'## ... with  marginally defined proportions
-#' wlsPower(mu0=0.5, mu1=0.25, Cl=rep(4,8), tau=0.5, N=1,
+#' glsPower(mu0=0.5, mu1=0.25, Cl=rep(4,8), tau=0.5, N=1,
 #'               family="binomial", marginal_mu=TRUE)
 #'
 #'##
@@ -215,7 +215,7 @@
 #'
 
 
- wlsPower <- function( Cl            = NULL,
+ glsPower <- function( Cl            = NULL,
                       timepoints    = NULL,
                       DesMat        = NULL,
                       trtDelay      = NULL,
@@ -361,7 +361,7 @@
         warning("If input to argument DesMat is of class `matrix`, \n",
                 "Cl, timepoints, trtDelay, dsntype are ignored.")
     }else
-      stop("In wlsPower: Cannot interpret input for DesMat. ",
+      stop("In glsPower: Cannot interpret input for DesMat. ",
            "It must be either an object of class DesMat or a matrix")
     dsntype <- DesMat$dsntype
   }
@@ -434,7 +434,7 @@
   if(!is.null(power)){
     if(power<0 | power>1) stop("power needs to be between 0 and 1.")
     N_opt <- tryCatch(ceiling(
-              uniroot(function(N){power - compute_wlsPower(DesMat    = DesMat,
+              uniroot(function(N){power - compute_glsPower(DesMat    = DesMat,
                                                            EffSize   = EffSize,
                                                            sigma     = sigma,
                                                            tau       = tau,
@@ -459,7 +459,7 @@
     N <- N_opt
   }
   ## calculate Power #####
-  out <- compute_wlsPower(DesMat    = DesMat,
+  out <- compute_glsPower(DesMat    = DesMat,
                           EffSize   = EffSize,
                           sigma     = sigma,
                           tau       = tau,
@@ -483,7 +483,7 @@
                               mu1         = mu1,
                               family      = family,
                               alpha_0_1_2 = alpha_0_1_2))
-    class(out) <- "wlsPower"
+    class(out) <- "glsPower"
   }
 
   return(out)
@@ -493,13 +493,13 @@
 #'
 #' @description
 #' This function is not intended to be used directly, but rather to be called
-#' by `wlsPower` - the main function of this package.
+#' by `glsPower` - the main function of this package.
 #' It expects the design matrix as an input argument `DesMat` and
 #' construct the covariance matrix (if not given as well). These matrices are
 #' used to calculate the variance of the treatment effect estimator which is
 #' then used to calculate the power to detect the assumed treatment effect.
 #'
-#' @inheritParams wlsPower
+#' @inheritParams glsPower
 #' @param DesMat  object of class `DesMat`.
 #' @param EffSize raw effect, i.e. difference between mean under control and
 #' mean under intervention
@@ -513,7 +513,7 @@
 #'
 #' @export
 
-compute_wlsPower <- function(DesMat,
+compute_glsPower <- function(DesMat,
                              EffSize,
                              sigma,
                              tau        = 0,
@@ -571,7 +571,7 @@ compute_wlsPower <- function(DesMat,
     tp_drop <- array(0,dim=c(dsncols,dsncols,tp))
 
     if(length(CovMat@x)<tp*tp*sumCl) {  ## ugly. Is needed to produce consistent sparse matrix indexing for tau=0 (and eta >=0)
-      i <- rep(J,tp)      + (i_add <- rep(tp*(I-1),each=tp*tp) ) ## wouldnt be necessary with bdiag_m ...
+      i <- rep(J,tp)      + (i_add <- rep(tp*(I-1),each=tp*tp) ) ## @SELF: wouldnt be necessary with bdiag_m ...
       j <- rep(J,each=tp) +  i_add
       CovMat <- CovMat + sparseMatrix(i,j,x=0)
     }
@@ -610,20 +610,9 @@ compute_wlsPower <- function(DesMat,
       }
     }
 
-  ## Formula-based calculation of information content
-    W  <- spdinv(as.matrix(CovMat))
-    X2 <- dsn[,-1]
-    x1 <- dsn[, 1]
-    Q  <- W %*% X2 %*% spdinv(t(X2)%*%W%*%X2) %*%t(X2)%*%W
-    WQ <- W - Q
-    hh <- as.numeric( t(x1)%*%WQ / c(t(x1)%*%WQ%*%x1) )
-    InfoContent$Closed <- matrix(1/(1 - hh^2*as.numeric(t(x1)%*%WQ%*%x1) / diag(WQ) ),
-                                 sumCl,tp, byrow=TRUE)
-
-    # ## Check consistency of methods
-    # maxDiff <- 0
-    # maxDiff <- max(abs(InfoContent$Cells - InfoContent$Closed))
-    # if(maxDiff>1e-12)  warning("formula-based information content and explicit information content differ")
+    ## Formula-based calculation of information content
+    InfoContent$Closed <- compute_InfoContent(CovMat=CovMat, dsn=dsn,
+                                            sumCl=sumCl  , tp=tp)
   }
 
 
@@ -672,13 +661,12 @@ compute_wlsPower <- function(DesMat,
   }
 }
 
-#' @title Print an object of class `wlsPower`
+#' @title Print an object of class `glsPower`
 #'
-#'
-#' @param x object of class wlsPower
+#' @param x object of class glsPower
 #' @param ... Arguments to be passed to methods
 #'
-#' @method print wlsPower
+#' @method print glsPower
 #'
 #' @return Messages, containing information about (at least) power and
 #' significance level
@@ -686,7 +674,7 @@ compute_wlsPower <- function(DesMat,
 #' @export
 #'
 #'
-print.wlsPower <- function(x, ...){
+print.glsPower <- function(x, ...){
   message("Power                                = ", round(x$power,4))
   if(x$Params$dfAdjust!="none"){
     message("ddf adjustment                       = ", x$Params$dfAdjust,"\n",
@@ -699,9 +687,9 @@ print.wlsPower <- function(x, ...){
 
 
 
-#' @title plot the information content of a wls object
+#' @title plot the information content of a gls object
 #'
-#' @inheritParams plot.wlsPower
+#' @inheritParams plot.glsPower
 #' @param IC a matrix with information content for each cluster at each time period
 #'
 #' @return a plotly object
@@ -710,6 +698,7 @@ print.wlsPower <- function(x, ...){
 
 plot_InfoContent <- function(IC,
                              annotations=NULL,
+                             annotation_size=NULL,
                              show_colorbar=TRUE,
                              marginal_plots=TRUE){
 
@@ -736,7 +725,9 @@ plot_InfoContent <- function(IC,
     colorbar(len=1,limits=c(1-1e-8,mx)) %>%
     layout(xaxis=list(title="Time"),
            yaxis=list(title="Cluster", autorange="reversed"))
-  if(annotations) PLT <- PLT %>% add_annotations(text=~zChar, showarrow=FALSE)
+  if(annotations) PLT <- PLT %>% add_annotations(text=~zChar,
+                                                 font=list(size=annotation_size),
+                                                 showarrow=FALSE)
 
 
   if(marginal_plots){
@@ -769,15 +760,16 @@ plot_InfoContent <- function(IC,
 }
 
 
-#' @title plot cell contributions (weights) of a wls object
+#' @title plot cell contributions (weights) of a gls object
 #'
-#' @inheritParams plot.wlsPower
+#' @inheritParams plot.glsPower
 #'
 #' @return a plotly html widget
 #' @export
 #'
 plot_CellWeights <- function(x,
                              annotations=NULL,
+                             annotation_size=NULL,
                              show_colorbar=TRUE,
                              marginal_plots=TRUE){
 
@@ -807,8 +799,9 @@ plot_CellWeights <- function(x,
     colorbar(len=1,limits=c(-mx,mx)) %>%
     layout(xaxis=list(title="Time"),
            yaxis=list(title="Cluster", autorange="reversed"))
-  if(annotations) PLT <- PLT %>% add_annotations(x=dat$x, y=dat$y,
-                                                 text=dat$wgtChar, showarrow=FALSE)
+  if(annotations) PLT <- PLT %>% add_annotations(text=dat$wgtChar,
+                                                 font=list(size=annotation_size),
+                                                 showarrow=FALSE)
 
   if(marginal_plots){
     PLT <- suppressWarnings(
@@ -843,7 +836,7 @@ plot_CellWeights <- function(x,
 
 
 
-#' @title plot an object of class `wlsPower`
+#' @title plot an object of class `glsPower`
 #'
 #' @description Up to four plots (selectable by `which`) that visualise:
 #' the contribution of each cluster-period cell to the treatment effect estimator,
@@ -851,50 +844,119 @@ plot_CellWeights <- function(x,
 #' the treatment status for each cluster for each time point and
 #' the covariance matrix. By default, only the first two plots are returned.
 #'
-#' @param x object of class wlsPower
+#' @param x object of class glsPower
 #' @param which Specify a subset of the numbers `1:4` to select plots. The default is
 #' `1:2` or `1`, depending on whether `x` contains the information content.
 #' @param show_colorbar logical, should the colorbars be shown?
 #' @param ... Arguments to be passed to methods
 #' @param annotations logical, should the cell contributions be annotated in the Plot?
+#' @param annotation_size font size of annotation in influence plots
 #' @param marginal_plots should the influence of whole periods, clusters also be plotted?
 #'
-#' @method plot wlsPower
+#' @method plot glsPower
 #'
 #' @return a list of plotly html widgets
 #'
 #' @export
 #'
-plot.wlsPower <- function(x, which=NULL, show_colorbar=NULL,
-                          annotations=NULL, marginal_plots=TRUE,...){
+plot.glsPower <- function(x, which=NULL, show_colorbar=NULL,
+                          annotations=NULL, annotation_size=NULL,
+                          marginal_plots=TRUE,...){
   out <- list()
   if(is.null(which))
     which <- if("InformationContent" %in% names(x)) 1:2 else 1
 
   if (1 %in% which){
-    out$WgtPlot <- plot_CellWeights(x, annotations=annotations,
+    out$WgtPlot <- plot_CellWeights(x,
+                                annotations=annotations,
+                                annotation_size=annotation_size,
                                 show_colorbar=show_colorbar,
                                 marginal_plots=marginal_plots)
   }
 
   if (2 %in% which){
-    if(!("InformationContent" %in% names(x)) ) stop("Please rerun wlsPower() with INFO_CONTENT=TRUE")
+    if(!("InformationContent" %in% names(x)) ) stop("Please rerun glsPower() with INFO_CONTENT=TRUE")
     out$IMplot <- plot_InfoContent(x$InformationContent,
-                                        annotations=annotations,
-                                        show_colorbar=show_colorbar,
-                                        marginal_plots=marginal_plots)
+                                   annotations=annotations,
+                                   annotation_size=annotation_size,
+                                   show_colorbar=show_colorbar,
+                                   marginal_plots=marginal_plots)
   }
 
   if (3 %in% which){
-    if(!("DesignMatrix" %in% names(x)) ) stop("Please rerun wlsPower() with verbose=2")
+    if(!("DesignMatrix" %in% names(x)) ) stop("Please rerun glsPower() with verbose=2")
     out$DMplot <- plot(x$DesignMatrix, show_colorbar=show_colorbar)
   }
 
   if (4 %in% which){
-    if(!("CovarianceMatrix" %in% names(x)) ) stop("Please rerun wlsPower() with verbose=2")
+    if(!("CovarianceMatrix" %in% names(x)) ) stop("Please rerun glsPower() with verbose=2")
     out$CMplot <- plot_CovMat(x$CovarianceMatrix, show_colorbar=show_colorbar)
   }
 
+  return(out)
+}
+
+
+wlsPower <- function( Cl            = NULL,
+                      timepoints    = NULL,
+                      DesMat        = NULL,
+                      trtDelay      = NULL,
+                      incomplete    = NULL,
+                      timeAdjust    = "factor",
+                      period        = NULL,
+                      dsntype       = "SWD",
+                      mu0,
+                      mu1,
+                      marginal_mu   = FALSE,
+                      sigma         = NULL,
+                      tau           = NULL,
+                      eta           = NULL,
+                      AR            = NULL,
+                      rho           = NULL,
+                      gamma         = NULL,
+                      psi           = NULL,
+                      alpha_0_1_2   = NULL,
+                      CovMat        = NULL,
+                      N             = NULL,
+                      power         = NULL,
+                      family        = "gaussian",
+                      N_range       = c(1,1000),
+                      sig.level     = 0.05,
+                      dfAdjust      = "none",
+                      INDIV_LVL     = FALSE,
+                      INFO_CONTENT  = NULL,
+                      verbose       = 1){
+  warning("function `wlsPower` is deprecated. Please use `glsPower` instead. ")
+
+  out <- glsPower( Cl            = Cl,
+                 timepoints    = timepoints,
+                 DesMat        = DesMat,
+                 trtDelay      = trtDelay,
+                 incomplete    = incomplete,
+                 timeAdjust    = timeAdjust,
+                 period        = period,
+                 dsntype       = dsntype,
+                 mu0           = mu0,
+                 mu1           = mu1,
+                 marginal_mu   = marginal_mu,
+                 sigma         = sigma,
+                 tau           = tau,
+                 eta           = eta,
+                 AR            = AR,
+                 rho           = rho,
+                 gamma         = gamma,
+                 psi           = psi,
+                 alpha_0_1_2   = alpha_0_1_2,
+                 CovMat        = CovMat,
+                 N             = N,
+                 power         = power,
+                 family        = family,
+                 N_range       = N_range,
+                 sig.level     = sig.level,
+                 dfAdjust      = dfAdjust,
+                 INDIV_LVL     = INDIV_LVL,
+                 INFO_CONTENT  = INFO_CONTENT,
+                 verbose       = verbose)
   return(out)
 }
 
