@@ -18,13 +18,14 @@
 #' @param DesMat Either an object of class `DesMat` or a matrix indicating the
 #' treatment status for each cluster at each timepoint. If supplied,
 #' `timepoints`,`Cl`,`trtDelay` are ignored.
-#' @param trtDelay numeric (possibly vector), value(s)
-#' between 0 and 1 specifying the proportion of intervention effect
-#' in the first (second ... ) intervention phase.
+#' @param trtDelay numeric (possibly vector), `NA`(s) and/or value(s)
+#' between `0` and `1`. `NA` means that first (second, ... ) period after intervention
+#' start is not observed. A value between `0` and `1` specifies the assumed proportion of intervention effect
+#' in the first (second ... ) intervention period.
 #' @param incomplete integer, either a scalar (only for SWD) or a matrix.
 #' A vector defines the number of periods before and after the switch from
-#' control to intervention that are observed. A matrix consists of 1's for
-#' observed clusterperiods and 0's for unobserved clusterperiods.
+#' control to intervention that are observed. A matrix consists of `1`s for
+#' observed clusterperiods and `0`s or `NA` for unobserved clusterperiods.
 #' @param timeAdjust character, specifies adjustment for time periods.
 #' One of the following: "factor", "linear", "none", "periodic".
 #' Defaults to "factor".
@@ -244,6 +245,7 @@
                       INDIV_LVL     = FALSE,
                       INFO_CONTENT  = NULL,
                       verbose       = 1){
+
   ## Match string inputs ####
   ### dsntype
   dsntypeOptions <- c("SWD","parallel","parallel_baseline","crossover")
@@ -258,6 +260,20 @@
   if(family != tmpfamily) {
     message("Assumes ", tmpfamily, "distribution")
     family <- tmpfamily
+  }
+  ### time Adjustment
+  AdjOptions <- c("factor", "none", "linear", "periodic", "quadratic")
+  tmptimeAdjust <- choose_character_Input(AdjOptions,timeAdjust)
+  if(tmptimeAdjust != timeAdjust){
+    message("Assumes", tmptimeAdjust, "as time adjustment")
+    timeAdjust <- tmptimeAdjust
+  }
+  ### df Adjustment
+  dfOptions <- c("none","between-within", "containment", "residual")
+  tmpdfAdjust <- choose_character_Input(dfOptions, dfAdjust)
+  if(tmpdfAdjust != dfAdjust){
+    message("Assumes", tmpdfAdjust, "as df adjustment")
+    dfAdjust <- tmpdfAdjust
   }
 
   ## CHECKS #####
@@ -357,7 +373,7 @@
                                  incomplete = incomplete,
                                  N          = if(INDIV_LVL) N,
                                  INDIV_LVL  = INDIV_LVL)
-      if(!all(sapply(list(Cl, timepoints, trtDelay, dsntype), is.null)))
+      if(!all(sapply(list(Cl, timepoints, trtDelay), is.null)))
         warning("If input to argument DesMat is of class `matrix`, \n",
                 "Cl, timepoints, trtDelay, dsntype are ignored.")
     }else
@@ -423,11 +439,10 @@
 
   ## incomplete designs #####
   if(!is.null(DesMat$incompMat) & is.null(CovMat)){
-    IM <- DesMat$incompMat
-    IM[IM==0] <- Inf
 
     sigma <- matrix(sigma, nrow=sumCl, ncol=timepoints,
-                    byrow=ifelse(length(sigma)!=timepoints,TRUE,FALSE)) * IM
+                    byrow=ifelse(length(sigma)!=timepoints,TRUE,FALSE))
+    sigma[DesMat$incompMat!=1 | is.na(DesMat$incompMat)] <- Inf
   }
 
   ## calculate samplesize (if needed, i.e. if power is not NULL ) #####
@@ -578,7 +593,8 @@ compute_glsPower <- function(DesMat,
 
     for(i in I){
       J_start  <- tp*(i-1)
-      J_incomp <- if(is.null(DesMat$incompMat)) J else J[DesMat$incompMat[i,]==1]  ## no computation of empty cells
+      J_incomp <- if(is.null(DesMat$incompMat)) J else
+        J[!(DesMat$incompMat[i,]!=1 | is.na(DesMat$incompMat[i,]) )]  ## no computation of empty cells
 
       Var_drop <-spdinv( VarInv - XW[,(J_start+J)] %*% submatrix(dsn,J_start+1,J_start+tp,1,dsncols) )
       InfoContent$Cluster[i] <- Var_drop[1,1]/Var[1,1]
@@ -596,7 +612,7 @@ compute_glsPower <- function(DesMat,
         }
       }
     }
-    if( tp>1 & sum(colSums(DesMat$trtMat)>0)>1 ){
+    if( tp>1 & sum(colSums(DesMat$trtMat,na.rm=TRUE)>0)>1 ){
       if(DesMat$timeAdjust=="factor"){ ## TODO: ADD WARNINGS !!
         for(j in J){
           Var_drop <- spdinv( (VarInv + tp_drop[,,j])[-(j+1),-(j+1)] )

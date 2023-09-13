@@ -3,6 +3,7 @@
 \docType{package}
 \name{SteppedPower-pkg}
 \alias{SteppedPower-pkg}
+\alias{SteppedPower-package}
 \title{SteppedPower}
 \description{
 SteppedPower offers tools for power and sample size

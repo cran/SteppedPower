@@ -13,7 +13,6 @@ construct_CovSubMat(
   AR = NULL,
   rho = NULL,
   gamma = NULL,
-  trtMat = NULL,
   psi = NULL,
   INDIV_LVL = FALSE
 )
@@ -46,11 +45,6 @@ assumed to be the same.
 
 \item{gamma}{numeric (vector of length `timepoints`),
 standard deviation of a random time effect.}
-
-\item{trtMat}{a matrix of dimension *#Cluster* x *timepoints* as produced by
-the function `construct_trtMat`, indicating the cluster-periods that receive
-interventional treatment. Defaults to NULL. If trtMat is given, the arguments
-`sumCl` and `timepoints` are ignored (!).}
 
 \item{psi}{numeric (scalar), random subject specific intercept.
 Leads to a closed cohort setting}

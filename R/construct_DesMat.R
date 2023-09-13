@@ -94,6 +94,17 @@ construct_DesMat <- function(Cl          = NULL,
                                      Cl         = Cl,
                                      trtmatrix  = trtMat)
 
+  if(any(is.na(trtMat))){
+    if(!exists("incompMat"))
+      incompMat <- matrix(1L,nrow=nrow(trtMat), ncol=ncol(trtMat))
+
+    incompMat[is.na(trtMat)]    <- 0L
+    dsnmatrix[is.na(dsnmatrix)] <- 0 ## must not be NA (for computation of XW)
+    trtMat[is.na(trtMat)]       <- 0 ## must not be NA (mainly for eta)
+  }
+
+
+  ## Return ####
   DesMat  <- list(dsnmatrix  = dsnmatrix,
                   timepoints = timepoints,
                   trtDelay   = trtDelay,
@@ -104,7 +115,7 @@ construct_DesMat <- function(Cl          = NULL,
                                       timeAdjust,
                                       "userdefined"),
                   trtMat     = trtMat,
-                  incompMat  = if(!is.null(incomplete)) incompMat else NULL)
+                  incompMat  = if(exists("incompMat")) incompMat else NULL)
   class(DesMat) <- append(class(DesMat),"DesMat")
 
   return(DesMat)
@@ -142,7 +153,9 @@ print.DesMat <- function(x, ...){
           "Dimension of design matrix         = ", dim(x$dsnmatrix)[1]," x ",
                                                    dim(x$dsnmatrix)[2],"\n",
           "\nTreatment status (clusters x timepoints):")
-  print(x$trtMat)
+  tmp <- x$trtMat
+  tmp[x$incompMat!=1 | is.na(x$incompMat)] <- NA
+  print(tmp)
 }
 
 
@@ -165,7 +178,7 @@ print.DesMat <- function(x, ...){
 plot.DesMat <- function(x, show_colorbar=FALSE, ...){
   trt <- x$trtMat
   if(!is.null(x$incompMat))
-    trt[x$incompMat==0] <- NA
+    trt[x$incompMat!=1 | is.na(x$incompMat)] <- NA
 
   plot_ly(type="heatmap",
           x=~(seq_len(dim(trt)[2])), y=~(seq_len(dim(trt)[1])),
@@ -326,7 +339,7 @@ construct_timeAdjust <- function(Cl,
   return(timeBlks)
 }
 
-#' @title Constructs a matrix of 0 and 1 for unobserved and observed cluster periods, respectively.
+#' @title Constructs a matrix of `NA` and `1` for unobserved and observed cluster periods, respectively.
 #'
 #' @description Mostly useful to build incomplete stepped wedge designs
 #'
@@ -350,10 +363,10 @@ construct_incompMat <- function(incomplete,dsntype,timepoints,Cl,
       warning("Argument `incomplete` must be less or equal to the number of",
               "timepoints. `incomplete` is set to ", timepoints )
     }
-    Toep <- toeplitz(c(rep(1,incomplete),rep(0,lenCl-incomplete)))
-    lastCols <- (timepoints-lenCl+1):timepoints
+    Toep <- toeplitz(c(rep(1L,incomplete),rep(NA,lenCl-incomplete)))
+    lastCols <- (timepoints-lenCl+1L):timepoints
 
-    IM <- matrix(1,lenCl,timepoints)
+    IM <- matrix(1L,lenCl,timepoints)
     IM[lower.tri(IM)]                       <- Toep[lower.tri(Toep)]
     IM[,lastCols][upper.tri(IM[,lastCols])] <- Toep[upper.tri(Toep)]
 

@@ -1,0 +1,131 @@
+---
+title: "Incomplete (Stepped Wedge) Designs with `SteppedPower`"
+author:
+- name: Philipp Mildenberger^[pmildenb@uni-mainz.de]
+  affiliation: Institute of Medical Biostatistics, Epidemiology and Informatics ([IMBEI, Mainz](https://www.unimedizin-mainz.de/imbei/imbei/welcome-page/))
+- name: Federico Marini^[marinif@uni-mainz.de]
+  affiliation: Institute of Medical Biostatistics, Epidemiology and Informatics ([IMBEI, Mainz](https://www.unimedizin-mainz.de/imbei/imbei/welcome-page/))
+date: "`r Sys.Date()`"
+output: 
+  rmarkdown::html_vignette:
+    toc: true
+    number_sections: true
+bibliography: references.bib
+vignette: >
+  %\VignetteIndexEntry{Incomplete Stepped Wedge Designs}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(SteppedPower)
+```
+
+# Incomplete Designs
+
+In general, a study design is referred to as incomplete if not all clusters are
+observed at every time period [@hemming2015stepped]. 
+
+Suppose you do not plan to observe all clusters over the whole study period.
+Rather, clusters that switch early to the intervention 
+are not observed until the end.
+Analogous, observation starts later in clusters 
+that switch towards the end of the study.
+
+
+# Incomplete Designs in `SteppedPower`
+
+There are essentially three ways to define cluster periods without observation. 
+
+* The first - and generally preferred - option is to use the `incomplete` argument. 
+Input can be either a scalar or a matrix of dimension clusters$\cdot$timepoints 
+or sequences$\cdot$timepoints:
+  * A scalar is interpreted as the number of observed periods before and 
+after the switch from control to intervention in each cluster
+  * A matrix must contain `1`s for cluster cells that are observed and `0` or `NA`s for
+  cluster cells that are not observed.
+* Insert `NA`s into an explicitly defined treatment matrix, easiest done with the argument `trtmatrix=`.
+* Insert `NA`s into the vector for delayed treatment start `trtDelay=`.
+
+`glsPower()` calls the function `construct_DesMat()` to construct 
+the design matrix with the relevant arguments. 
+All the above options can be used in the main wrapper function, but
+the examples below focus on `construct_DesMat()` directly.
+
+> `SteppedPower` stores information about (un)observed cluster cells separately from
+the treatment allocation. This is done for more consistency in the code as the 
+indices in the covariance and design matrices is 
+
+# Examples
+
+## 1
+If for example the a stepped wedge study consists of eight clusters 
+in four sequences (i.e. five timepoints), 
+and we observe two timepoints before and after the switch, then we receive
+
+```{r}
+Dsn1.1 <- construct_DesMat(Cl=rep(2,4), incomplete=2)
+```
+
+A slightly more tedious, but more flexible way is to define a matrix 
+where each row corresponds to either a cluster or a wave of clusters 
+and each column corresponds to a timepoint. 
+If a cluster is not observed at a specific timepoint, 
+set the value in the corresponding cell to `0`. 
+For the example above, such a matrix would look like this:
+
+```{r}
+TM  <- toeplitz(c(1,1,0,0))
+incompleteMat1 <- cbind(TM[,1:2],rep(1,4),TM[,3:4])
+incompleteMat2 <- incompleteMat1[rep(1:4,each=2),]
+```
+
+A matrix where each row represents a wave of clusters
+
+```{r, echo=FALSE}
+suppressWarnings(knitr::kable(incompleteMat1))
+```
+
+or each row represents a cluster
+
+```{r, echo=FALSE}
+suppressWarnings(knitr::kable(incompleteMat2))
+```
+
+Now all that's left to do is to plug that into the function and we receive the 
+same design matrix
+
+```{r}
+Dsn1.2 <- construct_DesMat(Cl=rep(2,4), incomplete=incompleteMat1)
+Dsn1.3 <- construct_DesMat(Cl=rep(2,4), incomplete=incompleteMat2)
+
+all.equal(Dsn1.1,Dsn1.2)
+all.equal(Dsn1.1,Dsn1.3)
+```
+
+
+> The argument `incomplete` with matrix input works also for other design types, 
+but makes (supposedly) most sense in the context of stepped wedge designs
+
+
+## 2
+
+Now suppose we want to use a SWD to investigate the intervention effects after at least one month,  
+i.e. cluster periods directly after the switch to intervention conditions are not observed. 
+That leads to an incomplete design that is easiest modelled with `trtDelay=`
+
+
+```{r}
+Dsn2 <- construct_DesMat(Cl=rep(2,4), trtDelay = c(NA) )
+Dsn2
+```
+
+## 3
+
+The above arguments can also be combined, e.g.
+```{r}
+Dsn3 <- construct_DesMat(Cl=rep(2,4), incomplete=2, trtDelay=c(NA) )
+Dsn3
+```
+

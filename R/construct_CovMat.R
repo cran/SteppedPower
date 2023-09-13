@@ -38,12 +38,12 @@ construct_CovBlk <- function(sigma,
 
   if(!is.null(tau)){
     tauMat <- if(is.null(AR[[1]])) tau %o% tau
-              else tau %o% tau * toeplitz(AR[[1]] ** (0:(timepoints-1)))
+              else tau %o% tau * toeplitz(AR[[1]] ^ (0:(timepoints-1)))
     out <- out + tauMat
   }
   if(!is.null(eta)) {
     etaMat <- if(is.null(AR[[2]])) eta %o% eta
-              else eta %o% eta * toeplitz(AR[[2]] ** (0:(timepoints-1)))
+              else eta %o% eta * toeplitz(AR[[2]] ^ (0:(timepoints-1)))
     out <- out + etaMat
   }
   if(!is.null(rho)) {
@@ -85,7 +85,6 @@ construct_CovSubMat <- function(N,
                                 AR        = NULL,
                                 rho       = NULL,
                                 gamma     = NULL,
-                                trtMat    = NULL,
                                 psi       = NULL,
                                 INDIV_LVL = FALSE){
 

@@ -48,14 +48,15 @@ Defaults to 1 for parallel designs.}
 treatment status for each cluster at each timepoint. If supplied,
 `timepoints`,`Cl`,`trtDelay` are ignored.}
 
-\item{trtDelay}{numeric (possibly vector), value(s)
-between 0 and 1 specifying the proportion of intervention effect
-in the first (second ... ) intervention phase.}
+\item{trtDelay}{numeric (possibly vector), `NA`(s) and/or value(s)
+between `0` and `1`. `NA` means that first (second, ... ) period after intervention
+start is not observed. A value between `0` and `1` specifies the assumed proportion of intervention effect
+in the first (second ... ) intervention period.}
 
 \item{incomplete}{integer, either a scalar (only for SWD) or a matrix.
 A vector defines the number of periods before and after the switch from
-control to intervention that are observed. A matrix consists of 1's for
-observed clusterperiods and 0's for unobserved clusterperiods.}
+control to intervention that are observed. A matrix consists of `1`s for
+observed clusterperiods and `0`s or `NA` for unobserved clusterperiods.}
 
 \item{timeAdjust}{character, specifies adjustment for time periods.
 One of the following: "factor", "linear", "none", "periodic".
