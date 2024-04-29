@@ -7,7 +7,7 @@
 RandEff_to_alpha012(sigResid, tau, gamma, psi)
 }
 \arguments{
-\item{sigResid}{Residual standard deviation on individual leve}
+\item{sigResid}{Residual standard deviation on individual level}
 
 \item{tau}{standard deviation of random cluster intercept}
 

@@ -11,7 +11,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 
 
-<meta name="date" content="2023-09-12" />
+<meta name="date" content="2024-04-29" />
 
 <title>Incomplete (Stepped Wedge) Designs with SteppedPower</title>
 
@@ -50,7 +50,7 @@ overflow: visible;
 </style>
 <style type="text/css" data-origin="pandoc">
 pre > code.sourceCode { white-space: pre; position: relative; }
-pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span { line-height: 1.25; }
 pre > code.sourceCode > span:empty { height: 1.2em; }
 .sourceCode { overflow: visible; }
 code.sourceCode > span { color: inherit; text-decoration: inherit; }
@@ -149,6 +149,7 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; }
 div.csl-bib-body { }
 div.csl-entry {
 clear: both;
+margin-bottom: 0em;
 }
 .hanging div.csl-entry {
 margin-left:2em;
@@ -367,7 +368,7 @@ Institute of Medical Biostatistics, Epidemiology and Informatics (<a href="https
 Mainz</a>)<br><h4 class="author">Federico Marini<a href="#fn2" class="footnote-ref" id="fnref2"><sup>2</sup></a></h4>
 <address class="author_afil">
 Institute of Medical Biostatistics, Epidemiology and Informatics (<a href="https://www.unimedizin-mainz.de/imbei/imbei/welcome-page/">IMBEI,
-Mainz</a>)<br><h4 class="date">2023-09-12</h4>
+Mainz</a>)<br><h4 class="date">2024-04-29</h4>
 
 
 <div id="TOC">
@@ -581,8 +582,9 @@ easiest modelled with <code>trtDelay=</code></p>
 <div id="section-2" class="section level2" number="3.3">
 <h2><span class="header-section-number">3.3</span> 3</h2>
 <p>The above arguments can also be combined, e.g.</p>
-<div class="sourceCode" id="cb11"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" tabindex="-1"></a>Dsn3 <span class="ot">&lt;-</span> <span class="fu">construct_DesMat</span>(<span class="at">Cl=</span><span class="fu">rep</span>(<span class="dv">2</span>,<span class="dv">4</span>), <span class="at">incomplete=</span><span class="dv">2</span>, <span class="at">trtDelay=</span><span class="fu">c</span>(<span class="cn">NA</span>) )</span>
-<span id="cb11-2"><a href="#cb11-2" tabindex="-1"></a>Dsn3</span></code></pre></div>
+<div class="sourceCode" id="cb11"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" tabindex="-1"></a>Dsn3 <span class="ot">&lt;-</span> <span class="fu">construct_DesMat</span>(<span class="at">Cl=</span><span class="fu">rep</span>(<span class="dv">2</span>,<span class="dv">4</span>), <span class="at">incomplete=</span><span class="dv">2</span>, <span class="at">trtDelay=</span><span class="fu">c</span>(<span class="cn">NA</span>) )</span></code></pre></div>
+<pre><code>## All `NA` in `trtMat` AND `0` (or `NA`) in `incomplete`, are considered to be not measured. `NA` in `trtMat` are set to `0` for computational reasons.</code></pre>
+<div class="sourceCode" id="cb13"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" tabindex="-1"></a>Dsn3</span></code></pre></div>
 <pre><code>## Timepoints                         = 5
 ## Number of clusters per seqence     = 2, 2, 2, 2</code></pre>
 <pre><code>## Design type                        = stepped wedge
@@ -599,7 +601,7 @@ easiest modelled with <code>trtDelay=</code></p>
 ## [6,]   NA    0    0   NA    1
 ## [7,]   NA   NA    0    0   NA
 ## [8,]   NA   NA    0    0   NA</code></pre>
-<div id="refs" class="references csl-bib-body hanging-indent">
+<div id="refs" class="references csl-bib-body hanging-indent" entry-spacing="0">
 <div id="ref-hemming2015stepped" class="csl-entry">
 Hemming, Karla, Terry P Haines, Peter J Chilton, Alan J Girling, and
 Richard J Lilford. 2015. <span>“The Stepped Wedge Cluster Randomised

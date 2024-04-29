@@ -131,7 +131,7 @@ icc_to_RandEff <- function(icc, cac=1, sigResid){
   if(any(c(icc,cac)<0,c(icc,cac)>1))
     stop("ICC and CAC must be between 0 and 1.")
 
-  if (cac == 1) {
+  if (any(cac == 1) ) {
     gamma <- 0
     tau   <- sqrt(sigResid^2 * icc/(1-icc))
   }
@@ -155,7 +155,7 @@ RandEff_to_icc <- function(sigResid, tau, gamma=0){
 
 #' Correlation structure: transform random effects to alpha
 #'
-#' @param sigResid Residual standard deviation on individual leve
+#' @param sigResid Residual standard deviation on individual level
 #' @param tau standard deviation of random cluster intercept
 #' @param gamma standard deviation of random time effect
 #' @param psi standard deviation of random subject specific intercept

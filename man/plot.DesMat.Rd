@@ -4,12 +4,16 @@
 \alias{plot.DesMat}
 \title{plot.DesMat}
 \usage{
-\method{plot}{DesMat}(x, show_colorbar = FALSE, ...)
+\method{plot}{DesMat}(x, show_colorbar = FALSE, INDIV_LVL = FALSE, ...)
 }
 \arguments{
 \item{x}{An object of class `DesMat`}
 
 \item{show_colorbar}{logical, should the colorbar be shown?}
+
+\item{INDIV_LVL}{logical, should the computation be conducted on an
+individual level? This leads to longer run time and is
+mainly for diagnostic purposes.}
 
 \item{...}{Arguments to be passed to methods}
 }
@@ -20,5 +24,5 @@ a plotly html widget, displaying the treatment status
 plot.DesMat
 }
 \examples{
-x <- construct_DesMat(C=c(2,2,2,0,2,2,2),.5)
+x <- construct_DesMat(Cl=c(2,2,2,0,2,2,2),.5)
 }

@@ -18,5 +18,4 @@
 #' @author Philipp Mildenberger \email{pmildenb@@uni-mainz.de}
 #' @name SteppedPower-pkg
 #' @aliases SteppedPower-package
-#' @docType package
 NULL

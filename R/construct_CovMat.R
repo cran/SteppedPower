@@ -124,7 +124,7 @@ construct_CovSubMat <- function(N,
 #' (or `construct_CovSubMat` in case of repeated
 #' observations of the same individuals) for each block.
 #'
-#' @inheritParams compute_glsPower
+#' @inheritParams glsPower
 #' @param timepoints numeric (scalar or vector), number of timepoints (periods).
 #' If design is swd, timepoints defaults to length(Cl)+1.
 #' Defaults to 1 for parallel designs.

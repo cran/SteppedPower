@@ -38,11 +38,11 @@ glsPower(Cl=c(10,10),timepoints=5,mu0=0,mu1=.25,
 glsPower(Cl=c(10,10),timepoints=5,mu0=0,mu1=.25,
          sigma=.5,tau=.2,dsntype="parallel")
 
-## ---- warning=FALSE-----------------------------------------------------------
+## ----warning=FALSE------------------------------------------------------------
 mod1 <- glsPower(Cl=c(1,1,1,0), mu0=0, mu1=1, 
                  sigma=0.4, tau=0, verbose=2)
 
-## ---- echo=FALSE--------------------------------------------------------------
+## ----echo=FALSE---------------------------------------------------------------
 knitr::kable(mod1$DesignMatrix$trtMat)
 
 ## -----------------------------------------------------------------------------
@@ -52,10 +52,10 @@ mod2 <- glsPower(Cl=c(2,2,2,2), mu0=0, mu1=1,
 mod3 <- glsPower(Cl=c(2,2,2,2), mu0=0, mu1=1, 
               sigma=1, N=100, tau=1, AR=.95, verbose=2)
 
-## ---- echo=FALSE--------------------------------------------------------------
+## ----echo=FALSE---------------------------------------------------------------
 suppressWarnings(knitr::kable(as.matrix(mod2$CovarianceMatrix[1:5,1:5])))
 
-## ---- echo=FALSE--------------------------------------------------------------
+## ----echo=FALSE---------------------------------------------------------------
 suppressWarnings(knitr::kable(as.matrix(mod3$CovarianceMatrix[1:5,1:5])))
 rm(mod1,mod2,mod3)
 
@@ -64,7 +64,7 @@ mod4 <- glsPower(Cl=c(1,1,1), mu0=0, mu1=1, N=c(1,3,10),
                  sigma=1, tau=.5, verbose=2)
 plot(mod4, which=2, show_colorbar=FALSE)$ICplot
 
-## ---- echo=FALSE--------------------------------------------------------------
+## ----echo=FALSE---------------------------------------------------------------
 rm(mod4)
 
 ## -----------------------------------------------------------------------------
@@ -77,10 +77,10 @@ TM  <- toeplitz(c(1,1,0,0))
 incompleteMat1 <- cbind(TM[,1:2],rep(1,4),TM[,3:4])
 incompleteMat2 <- incompleteMat1[rep(1:4,each=2),]
 
-## ---- echo=FALSE--------------------------------------------------------------
+## ----echo=FALSE---------------------------------------------------------------
 suppressWarnings(knitr::kable(incompleteMat1))
 
-## ---- echo=FALSE--------------------------------------------------------------
+## ----echo=FALSE---------------------------------------------------------------
 suppressWarnings(knitr::kable(incompleteMat2))
 
 ## -----------------------------------------------------------------------------
@@ -95,7 +95,7 @@ all.equal(incompletePwr,incompletePwr2)
 ## -----------------------------------------------------------------------------
 plot(incompletePwr, show_colorbar=FALSE)$WgtPlot
 
-## ---- echo=FALSE--------------------------------------------------------------
+## ----echo=FALSE---------------------------------------------------------------
 rm(incompletePwr,incompletePwr1,incompletePwr2,incompleteMat1,incompleteMat2)
 
 ## -----------------------------------------------------------------------------
@@ -105,10 +105,10 @@ TimeAdj1 <- glsPower(Cl=rep(2,4), mu0=0, mu1=1, sigma=1, tau=0,
 TimeAdj2 <- glsPower(Cl=rep(2,4), mu0=0, mu1=1, sigma=1, tau=0, 
                      timeAdjust="factor", verbose=2)
 
-## ---- echo=FALSE--------------------------------------------------------------
+## ----echo=FALSE---------------------------------------------------------------
 knitr::kable(head(TimeAdj1$DesignMatrix$dsnmatrix, 5))
 
-## ---- echo=FALSE--------------------------------------------------------------
+## ----echo=FALSE---------------------------------------------------------------
 knitr::kable(head(TimeAdj2$DesignMatrix$dsnmatrix, 5))
 
 ## -----------------------------------------------------------------------------
@@ -134,7 +134,7 @@ Open1 <- glsPower(mu0=0, mu1=5, Cl=rep(3,3),
 Closed1$power
 Open1$power
 
-## ---- fig.height=6------------------------------------------------------------
+## ----fig.height=6-------------------------------------------------------------
 Open2Indiv <- glsPower(mu0=0, mu1=10, Cl=c(1,1,1,0), 
                        sigma=1, tau=5, psi=10, AR=c(1,1,.60),
                        N=3, verbose=2, INDIV_LVL=TRUE)
@@ -175,6 +175,6 @@ glsPower(Cl = rep(6,4), N=N, mu0=mu0, mu1=mu1, verbose=0,
          sigma=sigma, tau=tau, 
          gamma=sqrt(gamma^2+chi*psi^2/N), psi=sqrt(1-chi)*psi)
 
-## ---- echo=FALSE--------------------------------------------------------------
+## ----echo=FALSE---------------------------------------------------------------
 print(sessionInfo(),locale=FALSE)
 

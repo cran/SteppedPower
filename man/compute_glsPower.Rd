@@ -14,7 +14,6 @@ compute_glsPower(
   rho = NULL,
   gamma = NULL,
   psi = NULL,
-  N = NULL,
   CovMat = NULL,
   dfAdjust = "none",
   sig.level = 0.05,
@@ -50,10 +49,6 @@ assumed to be the same.
 
 \item{psi}{numeric (scalar), random subject specific intercept.
 Leads to a closed cohort setting}
-
-\item{N}{numeric, number of individuals per cluster. Either a scalar, vector
-of length #Clusters or a matrix of dimension #Clusters x timepoints.
-Defaults to 1 if not passed.}
 
 \item{CovMat}{numeric, a positive-semidefinite matrix with
 (#Clusters \eqn{\cdot} timepoints) rows and columns. If `CovMat` is given,

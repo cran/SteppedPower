@@ -95,8 +95,11 @@ construct_DesMat <- function(Cl          = NULL,
                                      trtmatrix  = trtMat)
 
   if(any(is.na(trtMat))){
-    if(!exists("incompMat"))
+    if(!exists("incompMat", inherits=FALSE))
       incompMat <- matrix(1L,nrow=nrow(trtMat), ncol=ncol(trtMat))
+    else message("All `NA` in `trtMat` AND `0` (or `NA`) in `incomplete`, ",
+                 "are considered to be not measured. `NA` in `trtMat` are set to `0` ",
+                 "for computational reasons.")
 
     incompMat[is.na(trtMat)]    <- 0L
     dsnmatrix[is.na(dsnmatrix)] <- 0 ## must not be NA (for computation of XW)
@@ -109,13 +112,15 @@ construct_DesMat <- function(Cl          = NULL,
                   timepoints = timepoints,
                   trtDelay   = trtDelay,
                   Cl         = Cl,
-                  N          = if(INDIV_LVL) N else NULL,
+                  # N          = if(INDIV_LVL) N else NULL,
+                  N          = N,
                   dsntype    = dsntype,
                   timeAdjust = ifelse(is.null(timeBlk),
                                       timeAdjust,
                                       "userdefined"),
                   trtMat     = trtMat,
-                  incompMat  = if(exists("incompMat")) incompMat else NULL)
+                  incompMat  = if(exists("incompMat", inherits=FALSE)) incompMat
+                                else NULL)
   class(DesMat) <- append(class(DesMat),"DesMat")
 
   return(DesMat)
@@ -146,7 +151,7 @@ print.DesMat <- function(x, ...){
   message("Timepoints                         = ", x$timepoints,"\n",
           "Number of clusters per seqence     = ", paste(x$Cl, collapse= ", "))
   if(!is.null(x$N)){
-  message("Number of subclusters per cluster  = ", paste(x$N, collapse=", "))
+  message("Number of individuals per cluster  = ", paste(x$N, collapse=", "))
   }
   message("Design type                        = ", dsn_out,"\n",
           "Time adjustment                    = ", x$timeAdjust, "\n",
@@ -162,6 +167,7 @@ print.DesMat <- function(x, ...){
 
 #' @title plot.DesMat
 #'
+#' @inheritParams construct_DesMat
 #' @param x An object of class `DesMat`
 #' @param show_colorbar logical, should the colorbar be shown?
 #' @param ... Arguments to be passed to methods
@@ -173,22 +179,31 @@ print.DesMat <- function(x, ...){
 #' @export
 #'
 #' @examples
-#' x <- construct_DesMat(C=c(2,2,2,0,2,2,2),.5)
+#' x <- construct_DesMat(Cl=c(2,2,2,0,2,2,2),.5)
 
-plot.DesMat <- function(x, show_colorbar=FALSE, ...){
+plot.DesMat <- function(x, show_colorbar=FALSE, INDIV_LVL=FALSE, ...){
   trt <- x$trtMat
   if(!is.null(x$incompMat))
     trt[x$incompMat!=1 | is.na(x$incompMat)] <- NA
 
-  plot_ly(type="heatmap",
-          x=~(seq_len(dim(trt)[2])), y=~(seq_len(dim(trt)[1])),
-          z=~trt, xgap=5, ygap=5, name=" ",
+  yLabel <- "Cluster"
+  if(INDIV_LVL)  {
+    trt <- trt[rep(seq_len(sum(x$Cl)),x$N),]
+    yLabel <- "Subcluster"
+  }
+
+  out <- plot_ly(type="heatmap",
+          x=~(seq_len(dim(trt)[2])),
+          y=~(seq_len(dim(trt)[1])),
+          z=~trt,
+          xgap=5, ygap=5, name=" ",
           showscale=show_colorbar,
           colors=grDevices::colorRamp(c("steelblue","lightgoldenrod1","firebrick")),
           hovertemplate="Time: %{x},   Cluster: %{y} \nTreatment Status: %{z}") %>%
     layout(xaxis = list(title="time", type="category"),
-           yaxis = list(title="cluster",autorange="reversed",type="category")) %>%
+           yaxis = list(title=yLabel,autorange="reversed",type="category")) %>%
     colorbar(len=1, title="")
+  out
 }
 
 #' @title Construct Treatment Matrix
@@ -221,8 +236,9 @@ construct_trtMat <- function(Cl,
     trt    <- matrix(0,lenCl,timepoints)
     trt[upper.tri(trt)] <- 1
     if(!is.null(trtDelay)){
-      for(i in seq_along(trtDelay)){
-        diag(trt[,-(1:i)]) <- trtDelay[i]
+      for (i in seq_along(trtDelay)) {
+        trt[cbind(1:(min(lenCl,timepoints-i)),
+                  seq(1+i,min(lenCl+i,timepoints)))] <- trtDelay[i]
       }
     }
   }else if(dsntype=="parallel"){
