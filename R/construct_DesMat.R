@@ -3,11 +3,11 @@
 #' @description
 #' Constructs the design matrix with one column for every (fixed)
 #' parameter to be estimated and one row for every cluster for every timepoint.
-#' This function calls `construct_trtMat` to construct a matrix that indicates
+#' This function calls \code{\link{construct_trtMat}} to construct a matrix that indicates
 #' treatment status for each cluster at each timepoint.
 #' This is then transformed into the first
-#' column of the design matrix. `construct_CovMat` further calls
-#' `construct_timeAdjust` to get the fixed effect(s) of the timepoints.
+#' column of the design matrix. `construct_DesMat` further calls
+#' \code{\link{construct_timeAdjust}} to get the fixed effect(s) of the timepoints.
 #'
 #' Note: Unlike the usual notation, the treatment effect is in the first column
 #' (for easier access by higher level functions).
@@ -200,7 +200,7 @@ plot.DesMat <- function(x, show_colorbar=FALSE, INDIV_LVL=FALSE, ...){
           showscale=show_colorbar,
           colors=grDevices::colorRamp(c("steelblue","lightgoldenrod1","firebrick")),
           hovertemplate="Time: %{x},   Cluster: %{y} \nTreatment Status: %{z}") %>%
-    layout(xaxis = list(title="time", type="category"),
+    layout(xaxis = list(title="Time", type="category"),
            yaxis = list(title=yLabel,autorange="reversed",type="category")) %>%
     colorbar(len=1, title="")
   out

@@ -24,13 +24,13 @@ construct_CovSubMat(
 If design is swd, timepoints defaults to length(Cl)+1.
 Defaults to 1 for parallel designs.}
 
-\item{sigma}{numeric (vector of length `timepoints`),
+\item{sigma}{numeric (vector of length \code{timepoints}),
 residual error}
 
-\item{tau}{numeric (vector of length `timepoints`),
+\item{tau}{numeric (vector of length \code{timepoints}),
 standard deviation of random intercepts}
 
-\item{eta}{numeric (vector of length `timepoints`),
+\item{eta}{numeric (vector of length \code{timepoints}),
 standard deviation of random slope}
 
 \item{AR}{numeric, vector containing up to three values, each between 0 and 1.
@@ -39,11 +39,11 @@ The first element corresponds to the cluster intercept, the second to the
 treatment effect and the third to subject specific intercept.
 If only one element is provided, autocorrelation of all random effects is
 assumed to be the same.
-*Currently not compatible with `rho`!=0 !*}
+\emph{Currently not compatible with \code{rho}!=0 !}}
 
-\item{rho}{numeric (scalar), correlation of `tau` and `eta`. The default is no correlation.}
+\item{rho}{numeric (scalar), correlation of \code{tau} and \code{eta}. The default is no correlation.}
 
-\item{gamma}{numeric (vector of length `timepoints`),
+\item{gamma}{numeric (vector of length \code{timepoints}),
 standard deviation of a random time effect.}
 
 \item{psi}{numeric (scalar), random subject specific intercept.

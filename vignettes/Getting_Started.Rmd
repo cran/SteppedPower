@@ -1,9 +1,9 @@
 ---
 title: "Getting Started with `SteppedPower`"
 author:
-- name: Philipp Mildenberger^[pmildenb@uni-mainz.de]
+- name: Philipp Mildenberger
   affiliation: Institute of Medical Biostatistics, Epidemiology and Informatics ([IMBEI, Mainz](https://www.unimedizin-mainz.de/imbei/imbei/welcome-page/))
-- name: Federico Marini^[marinif@uni-mainz.de]
+- name: Federico Marini
   affiliation: Institute of Medical Biostatistics, Epidemiology and Informatics ([IMBEI, Mainz](https://www.unimedizin-mainz.de/imbei/imbei/welcome-page/))
 date: "`r Sys.Date()`"
 output: 
@@ -28,6 +28,25 @@ library(knitr)
 library(SteppedPower)
 library(Matrix)
 library(plotly)
+assign("knit_print.plotly", function(x, ...) {
+  x <- plotly::partial_bundle(x)
+  NextMethod()
+}, envir = .GlobalEnv)
+
+# A function for captioning and referencing images
+fig <- local({
+    i <- 0
+    ref <- list()
+    list(
+        cap=function(refName, text) {
+            i <<- i + 1
+            ref[[refName]] <<- i
+            paste("Figure ", i, ": ", text, sep="")
+        },
+        ref=function(refName) {
+            paste("(Fig.", ref[[refName]],")")
+        })
+})
 ```
 
 # About `SteppedPower`
@@ -40,8 +59,8 @@ parallel with baseline period(s) and
 crossover designs. Further design types can be 
 easily defined by the user.  
 
-Currently, normal outcomes and binomial outcomes with 
-identity link are implemented. 
+Currently, normal, binomial, and count (Poisson) outcomes with
+identity link are implemented (see also the [Binomial and Count Outcomes](Binomial_and_Count_Outcomes.html) vignette).
 The following random effects can be specified:
 random cluster intercept, random treatment effect, 
 random subject specific intercept and random time effect.
@@ -64,7 +83,7 @@ with
 
 * $y_{ijk}$ the response in cluster $i$ at time $j$ for individual $k$
 * $\mu_j$ the time trend at time $j$
-* $T_{ij}$ indicates the treatment status (0 = control, 1 = interventional treatment)
+* $T_{ij}$ the treatment status (0 = control, 1 = interventional treatment)
 * $\theta$ the treatment effect 
 * $c_i$ a random cluster effect for cluster $i$ with $c_i \sim N(0,\tau^2)$
 * $e_{ijk}$ a normal random error term with $e_{ijk}\sim N(0,\sigma^2)$
@@ -81,7 +100,7 @@ y&=X\beta + \omega
 
 Where $X$ is the corresponding design matrix and $\omega\sim N(0,\Omega)$,
 where $\Omega$ is a compound-symmetry (syn. exchangeable) variance matrix defined 
-by $\tau$ and $\sigma$. We are thus in a weighted least squares setting, 
+by $\tau$ and $\sigma$. We are thus in a generalized least squares setting, 
 so the variance of $\beta$ is
 
 $$ \text{Var}(\hat\beta) =  {(X'\Omega^{-1}X)^{-1}}$$
@@ -90,13 +109,11 @@ We can then calculate the power of a z-test
 
 $$ \text{power} = \Phi\left(\frac{\theta_A-\theta_0}{\sqrt{\text{Var}(\hat \theta)}}- Z_{1-\frac{\alpha}{2}}\right) $$
 
-where $\text{Var}(\hat \theta)$ is the diagonal element of $\Omega$ 
+where $\text{Var}(\hat \theta)$ is the diagonal element of $\text{Var}(\hat\beta)$
 that corresponds to $\hat\theta$.
 
-Extensions to the above formula implemented in this package are  
-
-
-with leads to the following extended model formula:
+There are further extensions implemented in this package 
+ with leads to the following extended model formula:
 
 $$y_{ijk}= T (\theta_{ij} + d_i) + c_i + \mu_j + t_{ij} + s_{ijk} + e_{ijk}$$ 
 with  
@@ -109,28 +126,15 @@ with
 
 
 
-## Specification of the correlation structure
+## Covariance Structure Specifications
 
+`SteppedPower` is most flexible when covariance structure is defined by the standard deviations of the random effects directly. However, for users more comfortable with correlation-based specifications, the package provides two alternative approaches that convert correlation parameters to random effect variances.
 
-<!-- The variances of the random effects define a correlation structure -->
+### $\alpha_0$, $\alpha_1$, $\alpha_2$
 
+A different approach to establish a covariance structure is to directly specify cluster cell correlations. Two approaches are considered in this package, with corresponding transformation functions `icc_to_RandEff()` and `alpha012_to_RandEff()`.
 
-<!-- Besides to the random effect specification -->
-
-<!-- $\left(\operatorname{corr}\left(y_{i j k}, y_{i j k^{\prime}}\right)=\alpha_{0} \text { for } k \neq k^{\prime}\right)$  -->
-
-<!-- $\left(\operatorname{corr}\left(y_{i j k}, y_{i j^{\prime} k^{\prime}}\right)=\alpha_{1}\right. \text{ for } j \neq j^{\prime} \text{ for } k \neq k^{\prime}$  -->
-
-<!-- $\left(\operatorname{corr}\left(y_{i j k}, y_{i j^{\prime} k}\right)=\alpha_{2} \text { for } j \neq j^{\prime}\right)$ -->
-
-<!-- $$\begin{align} -->
-<!-- \sigma_M^2 &:= \tau^2+\gamma^2 + \psi^2 + \sigma^2   \\ -->
-<!-- \alpha_0 &:= \frac{\tau^2 + \gamma^2}{\sigma_M^2}  \\ -->
-<!-- \alpha_1 &:= \frac{\tau^2}{\sigma_M^2} \\ -->
-<!-- \alpha_2 &:= \frac{\tau^2 + \psi^2}{\sigma_M^2} -->
-<!-- \end{align}$$ -->
-
-A different approach to establish a covariance structure is to directly assume cluster cell correlation as proposed by \cite{Preisser2003integrated} and introduced to the context of stepped wedge designs in [@li2018sample]. They use $\boldsymbol{\alpha}:=(\alpha_0, \alpha_1, \alpha_2)$ where 
+One version proposed by \cite{Preisser2003integrated} and introduced to the context of stepped wedge designs in [@li2018sample] uses $\boldsymbol{\alpha}:=(\alpha_0, \alpha_1, \alpha_2)$ where 
 		$\alpha_0:=\operatorname{corr}({y_{ijk},y_{ijk'}})$ for $ k\neq k'$ defines the within-period correlation; $\alpha_1:=\operatorname{corr}({y_{ijk},y_{ij'k'}})$ for $j\neq j', \, k\neq k'$ defines the inter-period correlation and $\alpha_0:=\operatorname{corr}({y_{ijk},y_{ij'k}})$ for $j\neq j'$ defines the within-individual correlation.
 		
 One receives an easily interpretable correlation matrix, albeit at the cost of some flexibility. We can translate $\boldsymbol{\alpha}$ into a representation with random effects, given a marginal variance $\sigma^2_{\text{marg}}$.
@@ -139,7 +143,7 @@ $$
 	\begin{align*}
 		\tau^2   		&:= {\sigma^2_{\text{marg}} \alpha_1} \\
 		\gamma^2 		&:= {\sigma^2_{\text{marg}} (\alpha_0-\alpha_1)} \\
-		\psi^2   	 	&:= {\sigma^2_{\text{marg}} (\alpha_2-\alpha_2)} \\
+		\psi^2   	 	&:= {\sigma^2_{\text{marg}} (\alpha_2-\alpha_1)} \\
 		\sigma^2_{\text{res}} 	&:= {\sigma^2_{\text{marg}} (1-\alpha_0 - \alpha_2 + \alpha_1)}
 	\end{align*}
 $$ 
@@ -147,39 +151,59 @@ $$
 Note that $\boldsymbol{\alpha}$ as defined above cannot specify a random treatment effect.
 
 
-# A quick tour
+### ICC, CAC and IAC
 
+Another version is explained in [@hooper2016sample]. It consists of intracluster correlation (**ICC**), cluster autocorrelation (**CAC**) and - for closed cohort settings - individual autocorrelation (**IAC**). Given a marginal variance, we can transform these into random effect variances with:
+
+$$
+\begin{align}
+  \tau^2 &:= \sigma^2_{\text{marg}} \cdot \text{ICC} \cdot \text{CAC} \\
+  \gamma^2 &:= \sigma^2_{\text{marg}} \cdot \text{ICC} \cdot (1 - \text{CAC}) \\
+  \psi^2 &:= \sigma^2_{\text{marg}} \cdot \text{IAC} \cdot (1 - \text{ICC})\\
+\end{align}
+$$
+
+
+ICC, CAC, and IAC cannot be directly specified in `glsPower` but can easily be transformed into $\alpha$. The corresponding $\alpha$ values are:
+$$
+\begin{align}
+  \alpha_0 &= \text{ICC} \\
+  \alpha_1 &= \text{ICC} \times \text{CAC} \\
+  \alpha_2 &= \text{IAC} \times (1 - \text{ICC}) + \text{ICC} \times \text{CAC} \\
+\end{align}
+$$
+
+Note that ICC, CAC and IAC as defined above cannot specify a random treatment effect.
+
+
+# Key functions
+
+## `glsPower` 
 For most users, the probably most important function is `glsPower`. 
 It calls several auxiliary functions which will be shortly discussed here.
-This section is not essential for the usage of `SteppedPower`, it might be
-helpful to design non-standard user defined settings. 
-
 `glsPower` is essentially just a flexible wrapper for the function 
 `compute_glsPower`, which does the actual computation.  
-`compute_glsPower` then calls `construct_DesMat` and `construct_CovMat`.
+
+## `construct_`-functions 
 
 `construct_DesMat` builds the design matrix which consists of the treatment 
 status, usually built by`construct_trtMat` and the time adjustment, usually
-built by `construct_timeadjust`. 
-There is also the option to pass a user defined definition of the treatment 
-status to `construct_DesMat`.
-If not specified, the number of timepoints is guessed as 
-the fewest number of periods (timepoints) possible with the given design, 
-i.e. two for cross-over designs or the number of waves plus one
-for stepped wedge designs. 
+built by `construct_timeAdjust`. There is also the option to pass a user defined definition of the treatment status to `construct_DesMat`. If not specified, the number of timepoints is guessed as the fewest number of periods (timepoints) possible with the given design, i.e. two for cross-over designs or the number of waves plus one for stepped wedge designs. 
 
-`construct_CovMat` builds the covariance matrix (explicitly). It uses 
-`construct_CovBlk` to construct the blocks for each cluster which are then combined
+`construct_CovMat` builds the covariance matrix (explicitly). It uses `construct_CovBlk` to construct the blocks for each cluster which are then combined
 to a block diagonal matrix.
 
 # Features 
 
-## Plot Method
+## Plotting
 
-The `plot.glsPower` method makes up to four plots, visualising the influence 
-of cluster-period cells, the information content of cluster-period cells, 
-the treatment matrix $T$ and the covariance matrix 
-(selectable by `which=`). 
+The `plot.glsPower` method offers up to four visualisations (selectable by `which=`).
+
+1. Influence of cluster-period cells
+2. Information content of cluster-period cells, 
+3. Treatment matrix $T$ 
+4. Covariance matrix 
+ 
 
 By default, only the first plot is returned. The information content is also
 plotted if it the object to be plotted contains the corresponding matrix 
@@ -187,37 +211,49 @@ plotted if it the object to be plotted contains the corresponding matrix
 approximation to a weighted least squares setting. Therefore, 
 the estimator $\hat \beta$ is a linear function of the data $y$
 
-$$\hat\beta = \underbrace{(X'\Omega^{-1}X)^{-1}(X'\Omega^{-1})}_{=:\text{M}}\cdot y$$
+$$\hat\beta = \underbrace{(X'\Omega^{-1}X)^{-1}(X'\Omega^{-1})}_{=:\text{H}}\cdot y$$
 
 with $X$ the design matrix and $\Omega$ the covariance matrix as above.
 The matrix $H$ gives an impression of the importance of clusters and 
 time periods with regard to the estimated coefficients $\hat\beta$. 
 The first row of $H$ corresponds to the coefficient of the treatment status, 
 i.e. the treatment effect.  
-The `plot.glsPower` method visualises this first row of $M$ as a matrix 
+The `plot.glsPower` method visualises this first row of $H$ as a matrix 
 where rows and columns correspond to clusters and time periods, respectively.
+
+
+```{r}
+glsPwr <- glsPower(Cl=c(3,2,3), mu0=0, mu1=1, sigma=1, tau=.5, verbose=2)
+
+```
+
+```{r, echo=FALSE, fig.height=8, fig.cap=fig$cap("Influence_Plot_1","Treatment allocation plot (top). Influence of cluster-period cells (center) and information content (bottom) of a stepped wedge design with 8 clusters in 3 sequences")}
+
+tmpplt <- plot(glsPwr,which=1:3, 
+               marginal_plots = FALSE,
+               show_colorbar  = FALSE)
+subplot(tmpplt[[3]],tmpplt[[1]],tmpplt[[2]], 
+        titleY=TRUE,
+        nrows=3,
+        margin=c(0,0,.03,.03)  )
+```
+
+The information content, as described in [@kasza2019information], looks like this:
+
+```{r, fig.cap=fig$cap("Info_Plot_1","Information content of cluster-period cells of a stepped wedge design with 8 clusters in 3 sequences.")}
+plot(glsPwr,which=2, show_colorbar=FALSE)$IMplot
+```
 
 Furthermore, to give a rough comparison of importance between clusters 
 (or between time periods), the sum of absolute weights per row (or per column) 
 is also shown. 
 
 
-```{r}
-glsPwr <- glsPower(Cl=c(3,2,3), mu0=0, mu1=1, sigma=1, tau=.5, verbose=2)
-plot(glsPwr,which=1, show_colorbar=FALSE)$WgtPlot 
-```
-
-The information content, as described in [@kasza2019information], looks like this:
-
-```{r}
-plot(glsPwr,which=2, show_colorbar=FALSE)$ICplot
-```
-
-
 >CAVE: The influence plot (above) yields out-of-bag estimates for the influence of 
 observations on $\hat\theta$, but not for $\text{Var}(\hat\theta)$. 
 The information content (below) visualises the relative change in 
-$\text{Var}(\hat\theta)$ when one particular cluster period is omitted.
+$\text{Var}(\hat\theta)$ when one particular cluster period is omitted. The 
+relationship between the two if analysed in more detail in [@mildenberger2023influence]
 
 ## Find Sample Size for given Power
 
@@ -232,9 +268,121 @@ glsPower(Cl=c(3,3,3), mu0=0, mu1=.2, sigma=1, tau=0, power=.8)
 So in this setting, you would need $50$ individuals per period in each cluster to 
 achieve a target power of $80\%$
 
-# Use cases and examples
+## Unequal Cluster Sizes
 
-## Comparison of two groups -- Z-Test
+One of the advantages of the explicit approach to calculate power is an increase in 
+flexibility. The user can specifiy different cluster sizes - which can even vary over time using the argument `N`. `N` can be:
+
+* a scalar, if all clusters have the same assumed size, 
+  which is also constant over time
+* a vector, if the size differs between clusters but 
+  is assumed to be constant over time
+* a matrix where each row corresponds to either 
+  a cluster or a wave of clusters and each column corresponds to a timepoint
+
+```{r}
+mod4 <- glsPower(Cl=c(1,1,1), mu0=0, mu1=1, N=c(1,3,10), 
+                 sigma=1, tau=.5, verbose=2)
+plot(mod4, which=1, show_colorbar=FALSE)[[1]]
+```
+
+```{r, echo=FALSE}
+rm(mod4)
+```
+
+## Incomplete Stepped Wedge Designs
+
+There are two main types of incomplete designs considered in this package;
+Incomplete designs with unobserved transition periods (on the right) are defined with the `trtDelay` argument. Designs with unobserved *"edge periods"* are defined with the `incomplete` argument. This is described in more detail in the [Incomplete Designs](Incomplete_Designs.html) vignette.
+
+```{r}
+Incomp1 <- plot(construct_DesMat(Cl=c(1,1,1,1,0), incomplete = 2))
+Incomp2 <- plot(construct_DesMat(Cl=c(1,1,1,1,0), trtDelay = c(NA)))
+
+plotly::subplot(Incomp1, Incomp2, nrows=1, titleX=TRUE, titleY=TRUE, margin=0.05) 
+```
+
+
+## Autocorrelated random effects
+
+In longitudinal studies, it can be sensible to assume that correlation within 
+clusters decreases with increasing time lag.
+The argument `AR` enables the user to specify a AR-1 correlation. `AR`
+must be any value between `0` and `1`. 
+The former corresponds to i.i.d. observations, 
+the latter to the usual compound symmetry covariance type.  
+
+Optionally, you can pass a vector of up to length three to `AR`. Then, the first element 
+applies to the cluster intercept, the second to the treatment effect (i.e. slope)
+and the third to the subject specific intercept. This is especially useful for 
+open cohort designs (see below).
+
+An example of a stepped wedge design with 3 clusters in 3 waves, 
+once with medium autocorrelation (`AR=0.6`) and 
+once with high autocorrelation (`AR=0.95`):
+
+```{r}
+plt1 <- glsPower(Cl=c(1,1,1), mu0=0, mu1=1, 
+                 sigma=1, N=1, tau=1, AR=1, verbose=2) |>
+  plot( which=4, show_colorbar = FALSE)
+
+plt2 <- glsPower(Cl=c(1,1,1), mu0=0, mu1=1, 
+                 sigma=1, N=1, tau=1, AR=.6, verbose=2) |>
+  plot( which=4, show_colorbar = FALSE)
+
+plotly::subplot(plt1[[1]], plt2[[1]], 
+                nrows=1 , titleX=TRUE, titleY= TRUE)
+```
+
+
+<!-- For `AR=0.6`, the covariance matrix within one cluster then looks like this: -->
+
+<!-- ```{r, echo=FALSE} -->
+<!-- suppressWarnings(knitr::kable(as.matrix(mod2$CovarianceMatrix[1:5,1:5]))) -->
+<!-- ``` -->
+
+<!-- For `AR=0.95` it takes the following shape -->
+
+<!-- ```{r, echo=FALSE} -->
+<!-- suppressWarnings(knitr::kable(as.matrix(mod3$CovarianceMatrix[1:5,1:5]))) -->
+<!-- rm(mod1,mod2,mod3) -->
+<!-- ``` -->
+
+
+## Adjustment for Secular Trends 
+
+The most usual method for the modelling of potential secular trends is
+to take time period as a factor into the analysis model
+[@hussey2007design; @hemming2015stepped; @hemming2020reflection]. 
+
+For diagnostic purposes (or for bold users), some other adjustment options are 
+implemented.
+
+```{r}
+TimeAdj1 <- glsPower(Cl=rep(2,4), mu0=0, mu1=1, sigma=1, tau=0, 
+                     timeAdjust="linear", verbose=2)
+
+TimeAdj2 <- glsPower(Cl=rep(2,4), mu0=0, mu1=1, sigma=1, tau=0, 
+                     timeAdjust="factor", verbose=2)
+```
+
+Design matrix of the first cluster with linear adjustment for secular trend:
+```{r, echo=FALSE}
+knitr::kable(head(TimeAdj1$DesignMatrix$dsnmatrix, 5))
+```
+
+Design matrix of the first cluster with categorical adjustment for secular trend:
+```{r, echo=FALSE}
+knitr::kable(head(TimeAdj2$DesignMatrix$dsnmatrix, 5))
+```
+
+## Non-Gaussian outcomes
+
+`SteppedPower` can also handle binomial and count (Poisson) outcomes, both with an identity link (see the [Binomial and Count Outcomes](Binomial_and_Count_Outcomes.html) vignette).
+
+# Use Cases
+
+## Cross-sectional Parallel Group Design
 
 This might be a proof of concept rather than an example with 
 practical relevance, but let's try to compare the mean in two groups. 
@@ -264,18 +412,15 @@ The main difference is that the distribution under
 the alternative is assumed to be symmetric,
 whereas the t-test assumes a non-central (hence skewed) t-distribution.
 
-## Longitudinal study -- parallel groups
+## Longitudinal Parallel Design
 
 ```{r}
-glsPower(Cl=c(10,10),timepoints=5,mu0=0,mu1=.25,
-         sigma=.5,dsntype="parallel")
-
 glsPower(Cl=c(10,10),timepoints=5,mu0=0,mu1=.25,
          sigma=.5,tau=.2,dsntype="parallel")
 ```
 
 
-## Stepped Wedge designs with empty sequences (i.e. waves)
+## Stepped Wedge designs with empty sequences (i.e. empty waves)
 
 
 Periods in which no cluster switches to the intervention 
@@ -287,173 +432,10 @@ mod1 <- glsPower(Cl=c(1,1,1,0), mu0=0, mu1=1,
                  sigma=0.4, tau=0, verbose=2)
 ```
 
+
 The treatment matrix is then stored under `mod1$DesignMatrix$trtMat`:
 ```{r, echo=FALSE}
 knitr::kable(mod1$DesignMatrix$trtMat)
-```
-
-## Autocorrelated random effects
-
-In longitudinal studies, it can be sensible to assume that correlation within 
-clusters decreases with increasing time lag.
-The argument `AR` enables the user to specify a AR-1 correlation. `AR`
-must be any value between `0` and `1`. 
-The former corresponds to i.i.d. observations, 
-the latter to the usual compound symmetry covariance type.  
-
-Optionally, you can pass a vector of up to length three to `AR`. Then, the first element 
-applies to the cluster intercept, the second to the treatment effect (i.e. slope)
-and the third to the subject specific intercept. This is especially useful for 
-open cohort designs (see below).
-
-An example of a stepped wedge design with 8 clusters in 4 waves, 
-once with medium autocorrelation (`AR=0.6`) and 
-once with high autocorrelation (`AR=0.95`):
-
-```{r}
-mod2 <- glsPower(Cl=c(2,2,2,2), mu0=0, mu1=1, 
-              sigma=1, N=100, tau=1, AR=.6, verbose=2)
-
-mod3 <- glsPower(Cl=c(2,2,2,2), mu0=0, mu1=1, 
-              sigma=1, N=100, tau=1, AR=.95, verbose=2)
-```
-
-For `AR=0.6`, the covariance matrix within one cluster then looks like this:
-
-```{r, echo=FALSE}
-suppressWarnings(knitr::kable(as.matrix(mod2$CovarianceMatrix[1:5,1:5])))
-```
-
-For `AR=0.95` it takes the following shape
-
-```{r, echo=FALSE}
-suppressWarnings(knitr::kable(as.matrix(mod3$CovarianceMatrix[1:5,1:5])))
-rm(mod1,mod2,mod3)
-```
-
-
-## Unequal cluster sizes
-
-The argument `N` defines the cluster size. `N` can be 
-
-* a scalar, if all clusters have the same assumed size, 
-  which is also constant over time
-* a vector, if the size differs between clusters but 
-  is assumed to be constant over time
-* a matrix where each row corresponds to either 
-  a cluster or a wave of clusters and each column corresponds to a timepoint
-
-```{r}
-mod4 <- glsPower(Cl=c(1,1,1), mu0=0, mu1=1, N=c(1,3,10), 
-                 sigma=1, tau=.5, verbose=2)
-plot(mod4, which=2, show_colorbar=FALSE)$ICplot
-```
-
-```{r, echo=FALSE}
-rm(mod4)
-```
-
-## Incomplete Stepped Wedge Designs
-
-Suppose you do not plan to observe all clusters over the whole study period.
-Rather, clusters that switch early to the intervention 
-are not observed until the end.
-Analogous, observation starts later in clusters 
-that switch towards the end of the study.
-This is sometimes called 'incomplete SWD' [@hemming2015stepped].
-
-There are two ways to achieve this in `SteppedPower`, both by using the `incomplete` argument.
-One can either scalar, which then defines the number of observed periods before and 
-after the switch from control to intervention in each cluster.
-
-If for example the study consists of eight clusters 
-in four sequences (i.e. five timepoints), 
-and we observe two timepoints before and after the switch, then we receive
-
-```{r}
-incompletePwr <- glsPower(Cl=rep(2,4), sigma=2, tau=.6, mu0=0,mu1=.5, N=80, 
-                             incomplete=2, verbose=2)
-incompletePwr
-```
-
-A slightly more tedious, but more flexible way is to define a matrix 
-where each row corresponds to either a cluster or a wave of clusters 
-and each column corresponds to a timepoint. 
-If a cluster is not observed at a specific timepoint, 
-set the value in the corresponding cell to `0`. 
-For the example above, such a matrix would look like this:
-
-```{r}
-TM  <- toeplitz(c(1,1,0,0))
-incompleteMat1 <- cbind(TM[,1:2],rep(1,4),TM[,3:4])
-incompleteMat2 <- incompleteMat1[rep(1:4,each=2),]
-```
-
-A matrix where each row represents a wave of clusters
-
-```{r, echo=FALSE}
-suppressWarnings(knitr::kable(incompleteMat1))
-```
-
-or each row represents a cluster
-
-```{r, echo=FALSE}
-suppressWarnings(knitr::kable(incompleteMat2))
-```
-
-Now all that's left to do is to plug that into the main function:
-
-```{r}
-incompletePwr1 <- glsPower(Cl=rep(2,4), sigma=2, tau=.6, mu0=0, mu1=.5, N=80, 
-                        incomplete=incompleteMat1, verbose=2)
-incompletePwr2 <- glsPower(Cl=rep(2,4), sigma=2, tau=.6, mu0=0, mu1=.5, N=80, 
-                        incomplete=incompleteMat2, verbose=2)
-
-all.equal(incompletePwr,incompletePwr1)
-all.equal(incompletePwr,incompletePwr2)
-```
-
-We can also have a quick look at the projection matrix where we see that the 
-clusters have a weight of exactly zero at the timepoints 
-where they are not observed
-
-```{r}
-plot(incompletePwr, show_colorbar=FALSE)$WgtPlot
-```
-
-
-```{r, echo=FALSE}
-rm(incompletePwr,incompletePwr1,incompletePwr2,incompleteMat1,incompleteMat2)
-```
-
-> The argument `incomplete` with matrix input works also for other design types, 
-but makes (supposedly) most sense in the context of stepped wedge designs
-
-## Adjustment for Secular Trends 
-
-The most usual method for the modelling of potential secular trends is
-to take time period as a factor into the analysis model
-[@hussey2007design; @hemming2015stepped; @hemming2020reflection]. 
-
-For diagnostic purposes (or for bold users), some other adjustment options are 
-implemented.
-
-```{r}
-TimeAdj1 <- glsPower(Cl=rep(2,4), mu0=0, mu1=1, sigma=1, tau=0, 
-                     timeAdjust="linear", verbose=2)
-
-TimeAdj2 <- glsPower(Cl=rep(2,4), mu0=0, mu1=1, sigma=1, tau=0, 
-                     timeAdjust="factor", verbose=2)
-```
-
-Design matrix of the first cluster with linear adjustment for secular trend:
-```{r, echo=FALSE}
-knitr::kable(head(TimeAdj1$DesignMatrix$dsnmatrix, 5))
-```
-
-Design matrix of the first cluster with categorical adjustment for secular trend:
-```{r, echo=FALSE}
-knitr::kable(head(TimeAdj2$DesignMatrix$dsnmatrix, 5))
 ```
 
 

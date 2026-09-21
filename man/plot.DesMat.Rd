@@ -7,7 +7,7 @@
 \method{plot}{DesMat}(x, show_colorbar = FALSE, INDIV_LVL = FALSE, ...)
 }
 \arguments{
-\item{x}{An object of class `DesMat`}
+\item{x}{An object of class \code{DesMat}}
 
 \item{show_colorbar}{logical, should the colorbar be shown?}
 

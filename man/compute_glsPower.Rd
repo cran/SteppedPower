@@ -23,7 +23,7 @@ compute_glsPower(
 )
 }
 \arguments{
-\item{DesMat}{object of class `DesMat`.}
+\item{DesMat}{object of class \code{DesMat}.}
 
 \item{EffSize}{raw effect, i.e. difference between mean under control and
 mean under intervention}
@@ -33,7 +33,7 @@ mean under intervention}
 \item{tau}{numeric, standard deviation of random intercepts}
 
 \item{eta}{numeric (scalar or matrix), standard deviation of random slopes.
-If `eta` is given as scalar, `trtMat` is needed as well.}
+If \code{eta} is given as scalar, \code{trtMat} is needed as well.}
 
 \item{AR}{numeric, vector containing up to three values, each between 0 and 1.
 Defaults to NULL. It defines the AR(1)-correlation of random effects.
@@ -41,9 +41,9 @@ The first element corresponds to the cluster intercept, the second to the
 treatment effect and the third to subject specific intercept.
 If only one element is provided, autocorrelation of all random effects is
 assumed to be the same.
-*Currently not compatible with `rho`!=0 !*}
+\emph{Currently not compatible with \code{rho}!=0 !}}
 
-\item{rho}{numeric (scalar), correlation of `tau` and `eta`. The default is no correlation.}
+\item{rho}{numeric (scalar), correlation of \code{tau} and \code{eta}. The default is no correlation.}
 
 \item{gamma}{numeric (scalar), random time effect}
 
@@ -51,8 +51,8 @@ assumed to be the same.
 Leads to a closed cohort setting}
 
 \item{CovMat}{numeric, a positive-semidefinite matrix with
-(#Clusters \eqn{\cdot} timepoints) rows and columns. If `CovMat` is given,
-`sigma`, `tau`, `eta`, `rho`, `gamma` and `psi` as well as `alpha_0_1_2`
+(#Clusters \eqn{\cdot} timepoints) rows and columns. If \code{CovMat} is given,
+\code{sigma}, \code{tau}, \code{eta}, \code{rho}, \code{gamma} and \code{psi} as well as \code{alpha_0_1_2}
 must be NULL.}
 
 \item{dfAdjust}{character, one of the following: "none","between-within",
@@ -65,23 +65,23 @@ individual level? This leads to longer run time and is
 mainly for diagnostic purposes.}
 
 \item{INFO_CONTENT}{logical, should the information content of cluster cells be
-computed? The default is `TRUE` for designs with less or equal than 2500
-cluster cells, otherwise `FALSE`. Ignored if `verbose=0`.}
+computed? The default is \code{TRUE} for designs with less or equal than 2500
+cluster cells, otherwise \code{FALSE}. Ignored if \code{verbose=0}.}
 
 \item{verbose}{integer, how much information should the function return?
-See also under `Value`.}
+See also under \code{Value}.}
 }
 \value{
-The return depends on the `verbose` parameter.
-If `verbose`=0, only the power is returned
-If `verbose`=1 (the default), a list containing power and the
+The return depends on the \code{verbose} parameter.
+If \code{verbose}=0, only the power is returned
+If \code{verbose}=1 (the default), a list containing power and the
 parameters of the specific setting is returned.
-If requested (by `verbose`=2) this list also contains relevant matrices.
+If requested (by \code{verbose}=2) this list also contains relevant matrices.
 }
 \description{
 This function is not intended to be used directly, but rather to be called
-by `glsPower` - the main function of this package.
-It expects the design matrix as an input argument `DesMat` and
+by \code{glsPower} - the main function of this package.
+It expects the design matrix as an input argument \code{DesMat} and
 construct the covariance matrix (if not given as well). These matrices are
 used to calculate the variance of the treatment effect estimator which is
 then used to calculate the power to detect the assumed treatment effect.

@@ -2,15 +2,15 @@
 % Please edit documentation in R/construct_DesMat.R
 \name{construct_incompMat}
 \alias{construct_incompMat}
-\title{Constructs a matrix of `NA` and `1` for unobserved and observed cluster periods, respectively.}
+\title{Constructs a matrix of \code{NA} and \code{1} for unobserved and observed cluster periods, respectively.}
 \usage{
 construct_incompMat(incomplete, dsntype, timepoints, Cl, trtmatrix = NULL)
 }
 \arguments{
 \item{incomplete}{integer, either a scalar (only for SWD) or a matrix.
 A vector defines the number of periods before and after the switch from
-control to intervention that are observed. A matrix consists of `1`s for
-observed clusterperiods and `0`s or `NA` for unobserved clusterperiods.}
+control to intervention that are observed. A matrix consists of \code{1}s for
+observed clusterperiods and \code{0}s or \code{NA} for unobserved cluster periods.}
 
 \item{dsntype}{character, defines the type of design. Options are "SWD",
 "parallel" and "parallel_baseline", defaults to "SWD".}

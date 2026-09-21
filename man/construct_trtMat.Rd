@@ -10,9 +10,9 @@ construct_trtMat(Cl, trtDelay, dsntype, timepoints = NULL)
 \item{Cl}{integer (vector), number of clusters per sequence group (in SWD),
 or number in control and intervention (in parallel designs)}
 
-\item{trtDelay}{numeric (possibly vector), `NA`(s) and/or value(s)
-between `0` and `1`. `NA` means that first (second, ... ) period after intervention
-start is not observed. A value between `0` and `1` specifies the assumed proportion of intervention effect
+\item{trtDelay}{numeric (possibly vector), \code{NA}(s) and/or value(s)
+between \code{0} and \code{1}. \code{NA} means that first (second, ... ) period after intervention
+start is not observed. A value between \code{0} and \code{1} specifies the assumed proportion of intervention effect
 in the first (second ... ) intervention period.}
 
 \item{dsntype}{character, defines the type of design. Options are "SWD",
@@ -27,7 +27,7 @@ a matrix trtMat, where rows and columns correspond to cluster
 and timepoints, respectively
 }
 \description{
-Constructs a matrix of `#cluster` rows and `#timepoint` columns, indicating
+Constructs a matrix of \verb{#cluster} rows and \verb{#timepoint} columns, indicating
 treatment status in each cluster at each timepoint.
 }
 \examples{

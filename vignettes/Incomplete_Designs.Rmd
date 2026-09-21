@@ -1,68 +1,93 @@
 ---
-title: "Incomplete (Stepped Wedge) Designs with `SteppedPower`"
+title: "Incomplete Designs in `SteppedPower`"
 author:
-- name: Philipp Mildenberger^[pmildenb@uni-mainz.de]
-  affiliation: Institute of Medical Biostatistics, Epidemiology and Informatics ([IMBEI, Mainz](https://www.unimedizin-mainz.de/imbei/imbei/welcome-page/))
-- name: Federico Marini^[marinif@uni-mainz.de]
+- name: Philipp Mildenberger
   affiliation: Institute of Medical Biostatistics, Epidemiology and Informatics ([IMBEI, Mainz](https://www.unimedizin-mainz.de/imbei/imbei/welcome-page/))
 date: "`r Sys.Date()`"
 output: 
   rmarkdown::html_vignette:
     toc: true
     number_sections: true
+    fig_caption: true
 bibliography: references.bib
 vignette: >
-  %\VignetteIndexEntry{Incomplete Stepped Wedge Designs}
+  %\VignetteIndexEntry{Incomplete Designs with `SteppedPower`}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(echo = TRUE, collapse = TRUE, comment = "#>",
+                     fig.width = 7, fig.height = 2, warning = FALSE)
+library(knitr)
 library(SteppedPower)
+library(Matrix)
+library(plotly)
+assign("knit_print.plotly", function(x, ...) {
+  x <- plotly::partial_bundle(x)
+  NextMethod()
+}, envir = .GlobalEnv)
+
+# A function for captioning and referencing images
+fig <- local({
+    i <- 0
+    ref <- list()
+    list(
+        cap=function(refName, text) {
+            i <<- i + 1
+            ref[[refName]] <<- i
+            paste("Figure ", i, ": ", text, sep="")
+        },
+        ref=function(refName) {
+            paste("(Fig.", ref[[refName]],")")
+        })
+})
 ```
 
-# Incomplete Designs
+# Main Types of Incomplete Designs
+
+>For a general introduction to `SteppedPower`, see the [Getting Started with `SteppedPower`](Getting_Started.html) vignette.
 
 In general, a study design is referred to as incomplete if not all clusters are
-observed at every time period [@hemming2015stepped]. 
+observed at every time period [@hemming2015stepped]. There are two main types of incomplete designs considered in this package.
 
-Suppose you do not plan to observe all clusters over the whole study period.
-Rather, clusters that switch early to the intervention 
-are not observed until the end.
-Analogous, observation starts later in clusters 
-that switch towards the end of the study.
+```{r, echo=FALSE, fig.cap=fig$cap("Incomp1","An incomplete stepped wedge design with four clusters with a total study duration of six periods. Clusters are only observed from two periods prior to treatment switch to two periods post switch.")}
+plot(construct_DesMat(Cl=c(1,1,1,1,0), incomplete = 2))
+```
+
+```{r, echo=FALSE, fig.cap=fig$cap("Incomp2","An incomplete stepped wedge design with four clusters with a total study duration of six periods. The first period after the switch to interventional treatment - the transition period - is not observed in each cluster.")}
+plot(construct_DesMat(Cl=c(1,1,1,1,0), trtDelay = c(NA)))
+```
+
+In the first type, clusters that switch early to the intervention are not observed until the end - accordingly, observation starts later in clusters that switch toward the end of the study `r fig$ref("Incomp1")`. The *"edge periods"* are thus not observed *(Fig. 1)*. The second type excludes the transition period(s) between control and intervention conditions *(Fig. 2)*. 
 
 
-# Incomplete Designs in `SteppedPower`
 
-There are essentially three ways to define cluster periods without observation. 
+# Defining Incomplete Designs in `SteppedPower`
 
-* The first - and generally preferred - option is to use the `incomplete` argument. 
-Input can be either a scalar or a matrix of dimension clusters$\cdot$timepoints 
-or sequences$\cdot$timepoints:
-  * A scalar is interpreted as the number of observed periods before and 
-after the switch from control to intervention in each cluster
-  * A matrix must contain `1`s for cluster cells that are observed and `0` or `NA`s for
-  cluster cells that are not observed.
+
+An incomplete design with unobserved edge periods can be defined with the `incomplete` argument. A scalar is interpreted as the number of observed periods before and after the treatment switch in each cluster.
+
+An incomplete design with unobserved transition periods is best defined with `trtDelay=c(NA)`. This specifies one unobserved transition period. 
+
+Further options to specify incomplete designs are:  
+
+* The input for the `incomplete` argument can also be a matrix of dimension clusters$\cdot$timepoints or sequences$\cdot$timepoints. A matrix must contain `1`s for cluster cells that are observed and `0` or `NA`s for cluster cells that are not observed.
 * Insert `NA`s into an explicitly defined treatment matrix, easiest done with the argument `trtmatrix=`.
-* Insert `NA`s into the vector for delayed treatment start `trtDelay=`.
 
 `glsPower()` calls the function `construct_DesMat()` to construct 
 the design matrix with the relevant arguments. 
 All the above options can be used in the main wrapper function, but
 the examples below focus on `construct_DesMat()` directly.
 
-> `SteppedPower` stores information about (un)observed cluster cells separately from
-the treatment allocation. This is done for more consistency in the code as the 
-indices in the covariance and design matrices is 
+> Note `SteppedPower` internally stores information about (un)observed cluster cells separately from the treatment allocation for computational reasons.
 
 # Examples
 
 ## 1
-If for example the a stepped wedge study consists of eight clusters 
-in four sequences (i.e. five timepoints), 
-and we observe two timepoints before and after the switch, then we receive
+If, for example, a stepped wedge study consists of eight clusters 
+in four sequences (i.e., five timepoints), 
+and only the last two periods before and the first two periods after the switch are observed, one can use the `incomplete` argument
 
 ```{r}
 Dsn1.1 <- construct_DesMat(Cl=rep(2,4), incomplete=2)
@@ -100,19 +125,18 @@ same design matrix
 Dsn1.2 <- construct_DesMat(Cl=rep(2,4), incomplete=incompleteMat1)
 Dsn1.3 <- construct_DesMat(Cl=rep(2,4), incomplete=incompleteMat2)
 
-all.equal(Dsn1.1,Dsn1.2)
-all.equal(Dsn1.1,Dsn1.3)
+all.equal(Dsn1.1$trtMat,Dsn1.2$trtMat)
+all.equal(Dsn1.1$trtMat,Dsn1.3$trtMat)
 ```
 
 
-> The argument `incomplete` with matrix input works also for other design types, 
-but makes (supposedly) most sense in the context of stepped wedge designs
+> The argument `incomplete` with matrix input works also for other design types, but makes primarily most sense in the context of stepped wedge designs
 
 
 ## 2
 
 Now suppose we want to use a SWD to investigate the intervention effects after at least one month,  
-i.e. cluster periods directly after the switch to intervention conditions are not observed. 
+i.e., cluster periods directly after the switch to intervention conditions are not observed. 
 That leads to an incomplete design that is easiest modelled with `trtDelay=`
 
 

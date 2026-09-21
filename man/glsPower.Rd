@@ -44,19 +44,20 @@ or number in control and intervention (in parallel designs)}
 If design is swd, timepoints defaults to length(Cl)+1.
 Defaults to 1 for parallel designs.}
 
-\item{DesMat}{Either an object of class `DesMat` or a matrix indicating the
+\item{DesMat}{Either an object of class \code{DesMat} created by the
+function \code{\link{construct_DesMat}} or a matrix indicating the
 treatment status for each cluster at each timepoint. If supplied,
-`timepoints`,`Cl`,`trtDelay` are ignored.}
+\code{timepoints},\code{Cl},\code{trtDelay} are ignored.}
 
-\item{trtDelay}{numeric (possibly vector), `NA`(s) and/or value(s)
-between `0` and `1`. `NA` means that first (second, ... ) period after intervention
-start is not observed. A value between `0` and `1` specifies the assumed proportion of intervention effect
+\item{trtDelay}{numeric (possibly vector), \code{NA}(s) and/or value(s)
+between \code{0} and \code{1}. \code{NA} means that first (second, ... ) period after intervention
+start is not observed. A value between \code{0} and \code{1} specifies the assumed proportion of intervention effect
 in the first (second ... ) intervention period.}
 
 \item{incomplete}{integer, either a scalar (only for SWD) or a matrix.
 A vector defines the number of periods before and after the switch from
-control to intervention that are observed. A matrix consists of `1`s for
-observed clusterperiods and `0`s or `NA` for unobserved clusterperiods.}
+control to intervention that are observed. A matrix consists of \code{1}s for
+observed clusterperiods and \code{0}s or \code{NA} for unobserved cluster periods.}
 
 \item{timeAdjust}{character, specifies adjustment for time periods.
 One of the following: "factor", "linear", "none", "periodic".
@@ -75,14 +76,14 @@ Defaults to "factor".}
 Indicates whether mu0 and mu1 are to be interpreted as marginal prevalence
 under control  and under treatment, respectively, or whether they denote
 the prevalence conditional on random effects being 0
-(It defaults to the latter). *(experimental!)*}
+(It defaults to the latter). \emph{(experimental!)}}
 
 \item{sigma}{numeric, residual error of cluster means if no N given.}
 
 \item{tau}{numeric, standard deviation of random intercepts}
 
 \item{eta}{numeric (scalar or matrix), standard deviation of random slopes.
-If `eta` is given as scalar, `trtMat` is needed as well.}
+If \code{eta} is given as scalar, \code{trtMat} is needed as well.}
 
 \item{AR}{numeric, vector containing up to three values, each between 0 and 1.
 Defaults to NULL. It defines the AR(1)-correlation of random effects.
@@ -90,9 +91,9 @@ The first element corresponds to the cluster intercept, the second to the
 treatment effect and the third to subject specific intercept.
 If only one element is provided, autocorrelation of all random effects is
 assumed to be the same.
-*Currently not compatible with `rho`!=0 !*}
+\emph{Currently not compatible with \code{rho}!=0 !}}
 
-\item{rho}{numeric (scalar), correlation of `tau` and `eta`. The default is no correlation.}
+\item{rho}{numeric (scalar), correlation of \code{tau} and \code{eta}. The default is no correlation.}
 
 \item{gamma}{numeric (scalar), random time effect}
 
@@ -107,8 +108,8 @@ the intracluster correlation and cluster autocorrelation, respectively - as
 defined by Hooper et al. (2016).}
 
 \item{CovMat}{numeric, a positive-semidefinite matrix with
-(#Clusters \eqn{\cdot} timepoints) rows and columns. If `CovMat` is given,
-`sigma`, `tau`, `eta`, `rho`, `gamma` and `psi` as well as `alpha_0_1_2`
+(#Clusters \eqn{\cdot} timepoints) rows and columns. If \code{CovMat} is given,
+\code{sigma}, \code{tau}, \code{eta}, \code{rho}, \code{gamma} and \code{psi} as well as \code{alpha_0_1_2}
 must be NULL.}
 
 \item{N}{numeric, number of individuals per cluster. Either a scalar, vector
@@ -116,13 +117,13 @@ of length #Clusters or a matrix of dimension #Clusters x timepoints.
 Defaults to 1 if not passed.}
 
 \item{power}{numeric, a specified target power.
-If supplied, the minimal `N` is returned.}
+If supplied, the minimal \code{N} is returned.}
 
 \item{family}{character, distribution family. One of "gaussian", "binomial".
 Defaults to "gaussian"}
 
-\item{N_range}{numeric, vector specifying the lower and upper bound for `N`,
-ignored if `power` is NULL.}
+\item{N_range}{numeric, vector specifying the lower and upper bound for \code{N},
+ignored if \code{power} is NULL.}
 
 \item{sig.level}{numeric (scalar), significance level, defaults to 0.05}
 
@@ -134,30 +135,32 @@ individual level? This leads to longer run time and is
 mainly for diagnostic purposes.}
 
 \item{INFO_CONTENT}{logical, should the information content of cluster cells be
-computed? The default is `TRUE` for designs with less or equal than 2500
-cluster cells, otherwise `FALSE`. Ignored if `verbose=0`.}
+computed? The default is \code{TRUE} for designs with less or equal than 2500
+cluster cells, otherwise \code{FALSE}. Ignored if \code{verbose=0}.}
 
 \item{verbose}{integer, how much information should the function return?
-See also under `Value`.}
+See also under \code{Value}.}
 }
 \value{
-The return depends on the `verbose` parameter.
-If `verbose`=0, only the power is returned
-If `verbose`=1 (the default), a list containing power, projection matrix and the
+The return depends on the \code{verbose} parameter.
+If \code{verbose}=0, only the power is returned
+If \code{verbose}=1 (the default), a list containing power, projection matrix and the
 parameters of the specific setting is returned.
-If explicitly requested (by `verbose`=2) this list also contains
-the `DesMat`-object and the covariance matrix.
+If explicitly requested (by \code{verbose}=2) this list also contains
+the \code{DesMat}-object and the covariance matrix.
 
 If INFO_CONTENT= TRUE, the returned list contains a named list with four elements:
-`Cells` is explicit computation of the information content in each cell;
-`Cluster` is the information content of entire clusters;
-`time` is thie information content of entire time periods and
-`Closed` is a formula-based computation the information content in each cell,
+\code{Cells} is explicit computation of the information content in each cell;
+\code{Cluster} is the information content of entire clusters;
+\code{time} is thie information content of entire time periods and
+\code{Closed} is a formula-based computation the information content in each cell,
 }
 \description{
 This is the main function of the SteppedPower package.
-It calls the constructor functions for the design matrix and
-covariance matrix, and then calculates the variance of the
+It calls the constructor functions for the design matrix
+\code{\link{construct_DesMat}} and
+covariance matrix \code{\link{construct_CovMat}},
+and then calculates the variance of the
 intervention effect estimator. The latter is then used
 to compute the power of a Wald test of a (given) intervention effect.
 }

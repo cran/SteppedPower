@@ -2,7 +2,7 @@
 % Please edit documentation in R/wlsPower.R
 \name{print.glsPower}
 \alias{print.glsPower}
-\title{Print an object of class `glsPower`}
+\title{Print an object of class \code{glsPower}}
 \usage{
 \method{print}{glsPower}(x, ...)
 }
@@ -16,5 +16,5 @@ Messages, containing information about (at least) power and
 significance level
 }
 \description{
-Print an object of class `glsPower`
+Print an object of class \code{glsPower}
 }

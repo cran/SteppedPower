@@ -2,7 +2,7 @@
 % Please edit documentation in R/helper_functions.R
 \name{RandEff_to_alpha012}
 \alias{RandEff_to_alpha012}
-\title{Correlation structure: transform random effects to alpha}
+\title{Transform random effects to alpha}
 \usage{
 RandEff_to_alpha012(sigResid, tau, gamma, psi)
 }
@@ -16,12 +16,14 @@ RandEff_to_alpha012(sigResid, tau, gamma, psi)
 \item{psi}{standard deviation of random subject specific intercept}
 }
 \value{
-a list containing four named elements (possibly matrices):
-`alpha0`, `alpha1`, `alpha2` specify a correlation structure and SigMarg
+a list containing four named elements (possibly vectors or matrices):
+\code{alpha0}, \code{alpha1}, \code{alpha2} specify a correlation structure. \code{SigMarg}
 denotes the marginal standard deviation
 }
 \description{
-Correlation structure: transform random effects to alpha
+Transforms standard deviations of random effects into a
+correlation structure specified by \eqn{\alpha_0, \alpha_1, \alpha_2}
+as defined in Li et al. (2018).
 }
 \examples{
 RandEff_to_alpha012(sigResid=sqrt(11), tau=4, gamma=3, psi=2)
@@ -31,4 +33,12 @@ RandEff_to_alpha012(sigResid = matrix(c(0,1,2,3,4,5), 2, 3),
                     tau      = matrix(c(1,1,1,0,0,0), 2, 3),
                     gamma    = matrix(c(0,0,1,0,0,1), 2, 3),
                     psi      = matrix(c(0,1,1,0,0,1), 2, 3))
+}
+\references{
+Li, F., Turner, E. L., & Preisser, J. S. (2018). \cr
+\emph{Sample size determination for GEE analyses of stepped wedge cluster randomized trials.} \cr
+Biometrics, 74(4), 1450-1458. DOI: 10.1111/biom.12918
+}
+\seealso{
+\code{\link[=RandEff_to_icc]{RandEff_to_icc()}}, \code{\link[=icc_to_RandEff]{icc_to_RandEff()}} or \code{\link[=alpha012_to_RandEff]{alpha012_to_RandEff()}}
 }

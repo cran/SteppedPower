@@ -2,7 +2,7 @@
 % Please edit documentation in R/wlsPower.R
 \name{plot.glsPower}
 \alias{plot.glsPower}
-\title{plot an object of class `glsPower`}
+\title{plot an object of class \code{glsPower}}
 \usage{
 \method{plot}{glsPower}(
   x,
@@ -17,8 +17,8 @@
 \arguments{
 \item{x}{object of class glsPower}
 
-\item{which}{Specify a subset of the numbers `1:4` to select plots. The default is
-`1:2` or `1`, depending on whether `x` contains the information content.}
+\item{which}{Specify a subset of the numbers \code{1:4} to select plots. The default is
+\code{1:2} or \code{1}, depending on whether \code{x} contains the information content.}
 
 \item{show_colorbar}{logical, should the colorbars be shown?}
 
@@ -34,7 +34,7 @@
 a list of plotly html widgets
 }
 \description{
-Up to four plots (selectable by `which`) that visualise:
+Up to four plots (selectable by \code{which}) that visualise:
 the contribution of each cluster-period cell to the treatment effect estimator,
 the information content of each cluster-period cell,
 the treatment status for each cluster for each time point and

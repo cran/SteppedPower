@@ -2,13 +2,13 @@
 % Please edit documentation in R/helper_functions.R
 \name{alpha012_to_RandEff}
 \alias{alpha012_to_RandEff}
-\title{Correlation structure: transform alpha to random effects}
+\title{Transform alpha to random effects}
 \usage{
 alpha012_to_RandEff(alpha012, sigResid = NULL, sigMarg = NULL)
 }
 \arguments{
 \item{alpha012}{A vector or a list of length 3. Each list element must have
-the same dimension.}
+the same dimension(s).}
 
 \item{sigResid}{Residual standard deviation on individual level. Either
 residual sd or marginal sd needs to be specified.}
@@ -17,12 +17,17 @@ residual sd or marginal sd needs to be specified.}
 residual sd or marginal sd needs to be specified.}
 }
 \value{
-a list containing four named elements (possibly matrices):
-random cluster intercept `tau`, random time effect `gamma`, random subject
-intercept and residual standard deviation
+a list containing four named elements (possibly vectors or matrices):
+\itemize{
+\item random cluster intercept \code{tau},
+\item random time effect \code{gamma},
+\item random subject intercept \code{psi},
+\item residual standard deviation \code{sigResid}.
+}
 }
 \description{
-Correlation structure: transform alpha to random effects
+Transforms a correlation structure specified by \eqn{\alpha_0, \alpha_1, \alpha_2}
+as defined in Li et al. (2018) into standard deviations of random effects.
 }
 \examples{
 alpha012_to_RandEff(alpha012=c(.1,.1,.1), sigMarg=1)
@@ -34,4 +39,12 @@ alpha012_to_RandEff(alpha012=list(matrix(c(0,.1,.1,.2), 2, 2),
                                   matrix(c(0,0,.2,.2) , 2, 2)),
                     sigMarg=1)
 
+}
+\references{
+Li, F., Turner, E. L., & Preisser, J. S. (2018). \cr
+\emph{Sample size determination for GEE analyses of stepped wedge cluster randomized trials.} \cr
+Biometrics, 74(4), 1450-1458. DOI: 10.1111/biom.12918
+}
+\seealso{
+\code{\link[=RandEff_to_icc]{RandEff_to_icc()}}, \code{\link[=icc_to_RandEff]{icc_to_RandEff()}} or \code{\link[=RandEff_to_alpha012]{RandEff_to_alpha012()}}
 }

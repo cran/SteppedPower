@@ -22,9 +22,9 @@ construct_DesMat(
 \item{Cl}{integer (vector), number of clusters per sequence group (in SWD),
 or number in control and intervention (in parallel designs)}
 
-\item{trtDelay}{numeric (possibly vector), `NA`(s) and/or value(s)
-between `0` and `1`. `NA` means that first (second, ... ) period after intervention
-start is not observed. A value between `0` and `1` specifies the assumed proportion of intervention effect
+\item{trtDelay}{numeric (possibly vector), \code{NA}(s) and/or value(s)
+between \code{0} and \code{1}. \code{NA} means that first (second, ... ) period after intervention
+start is not observed. A value between \code{0} and \code{1} specifies the assumed proportion of intervention effect
 in the first (second ... ) intervention period.}
 
 \item{dsntype}{character, defines the type of design. Options are "SWD",
@@ -53,8 +53,8 @@ Defaults to 1 if not passed.}
 
 \item{incomplete}{integer, either a scalar (only for SWD) or a matrix.
 A vector defines the number of periods before and after the switch from
-control to intervention that are observed. A matrix consists of `1`s for
-observed clusterperiods and `0`s or `NA` for unobserved clusterperiods.}
+control to intervention that are observed. A matrix consists of \code{1}s for
+observed clusterperiods and \code{0}s or \code{NA} for unobserved cluster periods.}
 
 \item{INDIV_LVL}{logical, should the computation be conducted on an
 individual level? This leads to longer run time and is
@@ -66,11 +66,11 @@ an object of class DesMat
 \description{
 Constructs the design matrix with one column for every (fixed)
 parameter to be estimated and one row for every cluster for every timepoint.
-This function calls `construct_trtMat` to construct a matrix that indicates
+This function calls \code{\link{construct_trtMat}} to construct a matrix that indicates
 treatment status for each cluster at each timepoint.
 This is then transformed into the first
-column of the design matrix. `construct_CovMat` further calls
-`construct_timeAdjust` to get the fixed effect(s) of the timepoints.
+column of the design matrix. \code{construct_DesMat} further calls
+\code{\link{construct_timeAdjust}} to get the fixed effect(s) of the timepoints.
 
 Note: Unlike the usual notation, the treatment effect is in the first column
 (for easier access by higher level functions).

@@ -32,7 +32,7 @@ Defaults to 1 for parallel designs.}
 \item{tau}{numeric, standard deviation of random intercepts}
 
 \item{eta}{numeric (scalar or matrix), standard deviation of random slopes.
-If `eta` is given as scalar, `trtMat` is needed as well.}
+If \code{eta} is given as scalar, \code{trtMat} is needed as well.}
 
 \item{AR}{numeric, vector containing up to three values, each between 0 and 1.
 Defaults to NULL. It defines the AR(1)-correlation of random effects.
@@ -40,22 +40,22 @@ The first element corresponds to the cluster intercept, the second to the
 treatment effect and the third to subject specific intercept.
 If only one element is provided, autocorrelation of all random effects is
 assumed to be the same.
-*Currently not compatible with `rho`!=0 !*}
+\emph{Currently not compatible with \code{rho}!=0 !}}
 
-\item{rho}{numeric (scalar), correlation of `tau` and `eta`. The default is no correlation.}
+\item{rho}{numeric (scalar), correlation of \code{tau} and \code{eta}. The default is no correlation.}
 
 \item{gamma}{numeric (scalar), random time effect}
 
-\item{trtMat}{a matrix of dimension *#Cluster* x *timepoints* as produced by
-the function `construct_trtMat`, indicating the cluster-periods that receive
+\item{trtMat}{a matrix of dimension \emph{#Cluster} x \emph{timepoints} as produced by
+the function \code{\link{construct_trtMat}}, indicating the cluster-periods that receive
 interventional treatment. Defaults to NULL. If trtMat is given, the arguments
-`sumCl` and `timepoints` are ignored (!).}
+\code{sumCl} and \code{timepoints} are ignored (!).}
 
 \item{N}{numeric, number of individuals per cluster. Either a scalar, vector
 of length #Clusters or a matrix of dimension #Clusters x timepoints.
 Defaults to 1 if not passed.}
 
-\item{CovBlk}{a matrix of dimension *timepoints* x *timepoints*.}
+\item{CovBlk}{a matrix of dimension \emph{timepoints} x \emph{timepoints}.}
 
 \item{psi}{numeric (scalar), random subject specific intercept.
 Leads to a closed cohort setting}
@@ -69,8 +69,8 @@ a covariance matrix
 }
 \description{
 constructs a (block diagonal) covariance matrix.
-This function calls `construct_CovBlk`
-(or `construct_CovSubMat` in case of repeated
+This function calls \code{\link{construct_CovBlk}}
+(or \code{\link{construct_CovSubMat}} in case of repeated
 observations of the same individuals) for each block.
 }
 \examples{

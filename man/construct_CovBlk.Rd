@@ -7,13 +7,13 @@
 construct_CovBlk(sigma, tau = NULL, eta = NULL, AR = NULL, rho = NULL)
 }
 \arguments{
-\item{sigma}{numeric (vector of length `timepoints`),
+\item{sigma}{numeric (vector of length \code{timepoints}),
 residual error}
 
-\item{tau}{numeric (vector of length `timepoints`),
+\item{tau}{numeric (vector of length \code{timepoints}),
 standard deviation of random intercepts}
 
-\item{eta}{numeric (vector of length `timepoints`),
+\item{eta}{numeric (vector of length \code{timepoints}),
 standard deviation of random slope}
 
 \item{AR}{numeric, vector containing up to three values, each between 0 and 1.
@@ -22,9 +22,9 @@ The first element corresponds to the cluster intercept, the second to the
 treatment effect and the third to subject specific intercept.
 If only one element is provided, autocorrelation of all random effects is
 assumed to be the same.
-*Currently not compatible with `rho`!=0 !*}
+\emph{Currently not compatible with \code{rho}!=0 !}}
 
-\item{rho}{numeric (scalar), correlation of `tau` and `eta`. The default is no correlation.}
+\item{rho}{numeric (scalar), correlation of \code{tau} and \code{eta}. The default is no correlation.}
 }
 \value{
 a block of a covariance matrix,
@@ -33,8 +33,8 @@ corresponding to intra-cluster covariance over time for one cluster
 \description{
 Constructs the covariance matrix
 for multiple measurements of the same cluster.
-This function is usually called by `construct_CovMat` and is
- not designed to be used directly.
+This function is usually called by \code{construct_CovMat} and is
+not designed to be used directly.
 }
 \examples{
 construct_CovBlk(sigma=rep(2,5), tau=rep(1,5))

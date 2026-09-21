@@ -3,11 +3,12 @@
 #'
 #' @description
 #' This is the main function of the SteppedPower package.
-#' It calls the constructor functions for the design matrix and
-#' covariance matrix, and then calculates the variance of the
+#' It calls the constructor functions for the design matrix
+#' \code{\link{construct_DesMat}} and
+#' covariance matrix \code{\link{construct_CovMat}},
+#' and then calculates the variance of the
 #' intervention effect estimator. The latter is then used
 #' to compute the power of a Wald test of a (given) intervention effect.
-#'
 #'
 #'
 #' @param Cl integer (vector), number of clusters per sequence group (in SWD),
@@ -15,7 +16,8 @@
 #' @param timepoints numeric (scalar or vector), number of timepoints (periods).
 #' If design is swd, timepoints defaults to length(Cl)+1.
 #' Defaults to 1 for parallel designs.
-#' @param DesMat Either an object of class `DesMat` or a matrix indicating the
+#' @param DesMat Either an object of class `DesMat` created by the
+#' function \code{\link{construct_DesMat}} or a matrix indicating the
 #' treatment status for each cluster at each timepoint. If supplied,
 #' `timepoints`,`Cl`,`trtDelay` are ignored.
 #' @param trtDelay numeric (possibly vector), `NA`(s) and/or value(s)
@@ -25,19 +27,23 @@
 #' @param incomplete integer, either a scalar (only for SWD) or a matrix.
 #' A vector defines the number of periods before and after the switch from
 #' control to intervention that are observed. A matrix consists of `1`s for
-#' observed clusterperiods and `0`s or `NA` for unobserved clusterperiods.
+#' observed clusterperiods and `0`s or `NA` for unobserved cluster periods.
 #' @param timeAdjust character, specifies adjustment for time periods.
 #' One of the following: "factor", "linear", "none", "periodic".
 #' Defaults to "factor".
 #' @param dsntype character, defines the type of design. Options are "SWD",
 #' "parallel" and "parallel_baseline", defaults to "SWD".
-#' @param mu0 numeric (scalar), mean under control
-#' @param mu1 numeric (scalar), mean under treatment
-#' @param marginal_mu logical. Only relevant for non-gaussian outcome.
+#' @param mu0 numeric (scalar), mean under control. For `family="poisson"` this is
+#' the expected count (rate) under control.
+#' @param mu1 numeric (scalar), mean under treatment. For `family="poisson"` this is
+#' the expected count (rate) under treatment.
+#' @param marginal_mu logical. Only relevant for `family="binomial"`.
 #' Indicates whether mu0 and mu1 are to be interpreted as marginal prevalence
 #' under control  and under treatment, respectively, or whether they denote
 #' the prevalence conditional on random effects being 0
 #' (It defaults to the latter). *(experimental!)*
+#' For `family="poisson"` the identity link implies that the marginal mean equals
+#' the conditional mean, so this argument has no effect.
 #' @param sigma numeric, residual error of cluster means if no N given.
 #' @param tau numeric, standard deviation of random intercepts
 #' @param eta numeric (scalar or matrix), standard deviation of random slopes.
@@ -62,8 +68,8 @@
 #' @param N numeric, number of individuals per cluster. Either a scalar, vector
 #' of length #Clusters or a matrix of dimension #Clusters x timepoints.
 #' Defaults to 1 if not passed.
-#' @param family character, distribution family. One of "gaussian", "binomial".
-#' Defaults to "gaussian"
+#' @param family character, distribution family. One of "gaussian", "binomial",
+#' or "poisson". Defaults to "gaussian"
 #' @param power numeric, a specified target power.
 #' If supplied, the minimal `N` is returned.
 #' @param N_range numeric, vector specifying the lower and upper bound for `N`,
@@ -213,6 +219,17 @@
 #'
 #'##
 #'##
+#'## stepped wedge design with 6 clusters, count (Poisson) outcome,
+#'## rate of 3 under control and 4 under treatment,
+#'## cluster effect sd = 1, 10 individuals per cluster.
+#'glsPower(mu0=3, mu1=4, Cl=rep(1,6), tau=1, N=10, family="poisson")
+#'##
+#'##
+#'## ... with alpha_0_1_2 notation targeting an ICC of 0.1
+#'glsPower(mu0=3, mu1=4, Cl=rep(1,6), alpha_0_1_2=c(0.1,0.1), N=10,
+#'              family="poisson")
+#'##
+#'##
 #'
 
 
@@ -255,7 +272,7 @@
     dsntype <- tmpdsntype
   }
   ### family
-  familyOptions <- c("gaussian", "binomial")
+  familyOptions <- c("gaussian", "binomial", "poisson")
   tmpfamily     <- choose_character_Input(familyOptions, family)
   if(family != tmpfamily) {
     message("Assumes ", tmpfamily, "distribution")
@@ -367,6 +384,10 @@
         warning("If input to argument DesMat inherits class `DesMat`, \n",
                 "Cl, timepoints, trtDelay, incomplete,",
                 "timeAdjust, period and dsntype are ignored.")
+      if(!is.null(N)){
+        DesMat$N <- N
+        message("Argument N supplied to glsPower overrides N stored in DesMat object.")
+      }
     } else if(inherits(DesMat,"matrix") & !inherits(DesMat,"DesMat")){
       DesMat <- construct_DesMat(trtmatrix  = DesMat,
                                  timeAdjust = timeAdjust,
@@ -402,20 +423,20 @@
 
   ## distribution family ####
   if(family =="gaussian"){
-    if(Usealpha){
-      tmp   <- alpha012_to_RandEff(alpha012=alpha_0_1_2, sigResid=sigma)
-      tau   <- tmp$tau
-      gamma <- tmp$gamma
-      psi   <- tmp$psi
-    }
+
   } else if(family =="binomial"){
+
+  ## TODO: Decide whether mu0,mu1 define the residual or
+  ## the marginal variance by default (or something in between).
+  ##
+  ## Hemming/Hooper use it as marginal variance by default.
 
     if(marginal_mu){
       if(!UseRandEff)
         stop("marginal_mu currently only implemented for random effects")
       mu0 <-muCond_to_muMarg(muCond=mu0, tauLin=tau)
       mu1 <-muCond_to_muMarg(muCond=mu1, tauLin=tau)
-      print(paste("mu0=",round(mu0,5),", mu1=",round(mu1,5),"."))
+      message("mu0=",round(mu0,5),", mu1=",round(mu1,5),".")
     }
 
     muMat   <- matrix(mu0, sumCl, timepoints) + DesMat$trtMat*(mu1-mu0)
@@ -423,24 +444,32 @@
 
     if (verbose>0) {
       OR <- (mu1*(1-mu0))/(mu0*(1-mu1))
-      print(paste("The assumed odds ratio is",round(OR,4))) ## user information
+      message("The assumed odds ratio is ",round(OR,4)) ## user information
     }
+  } else if(family =="poisson") {
 
-    if(Usealpha){
-      tmp   <- alpha012_to_RandEff(alpha012=alpha_0_1_2, sigResid=sigma)
-      tau   <- tmp$tau
-      gamma <- tmp$gamma
-      psi   <- tmp$psi
-    }
+    muMat <- matrix(mu0, sumCl, timepoints) + DesMat$trtMat*(mu1-mu0)
+    sigma <- sqrt(muMat)
+
   }
 
+  ## convert covariance specification to random effects ####
+  if(Usealpha){
+    tmp   <- alpha012_to_RandEff(alpha012=alpha_0_1_2, sigResid=sigma)
+    tau   <- tmp$tau
+    gamma <- tmp$gamma
+    psi   <- tmp$psi
+  }
+
+  ## compute Effect Size ####
   EffSize <- mu1-mu0
 
   if(marginal_mu & verbose>0)
-    print(paste("The (raw) effect is",round(EffSize,5)))
+    message("The (raw) effect is ",round(EffSize,5))
 
 
-  ## incomplete designs #####
+  ## incomplete designs ####
+  ## TODO: Is the check `is.null(CovMat)` really needed here?
   if(!is.null(DesMat$incompMat) & is.null(CovMat)){
 
     sigma <- matrix(sigma, nrow=sumCl, ncol=timepoints,
@@ -580,6 +609,7 @@ compute_glsPower <- function(DesMat,
   # currently computed twice, once explicitly, once using the specific formula
   # explicit computation will be removed in near future
   if(INFO_CONTENT){
+    InfoContent <- tryCatch({
     I <- 1:sumCl
     J <- 1:tp
     InfoContent <- list(Cells   = matrix(NA,sumCl,tp),
@@ -631,6 +661,10 @@ compute_glsPower <- function(DesMat,
     ## Formula-based calculation of information content
     InfoContent$Closed <- compute_InfoContent(CovMat=CovMat, dsn=dsn,
                                             sumCl=sumCl  , tp=tp)
+    InfoContent
+    }, error = function(...) {
+      warning("Information content calculation failed")
+      NULL})
   }
 
 
@@ -662,9 +696,8 @@ compute_glsPower <- function(DesMat,
                              dfAdjust   = dfAdjust,
                              sig.level  = sig.level),
                 ProjMatrix = ProjMat)
-  if(INFO_CONTENT){
-    out <- append(out,
-                  list(InformationContent= InfoContent))
+  if(INFO_CONTENT && !is.null(InfoContent)){
+    out <- append(out, list(InformationContent = InfoContent))
   }
   if(verbose==2)
     out <- append(out,
@@ -715,6 +748,10 @@ plot_InfoContent <- function(IC,
                              annotation_size=NULL,
                              show_colorbar=TRUE,
                              marginal_plots=TRUE){
+  if (is.null(IC) || is.null(IC$Cells) || nrow(IC$Cells)==0) {
+    warning("Information content calculation failed")
+    return(plot_ly())
+  }
 
   if(is.null(annotations)){
     annotations <- ifelse(length(IC$Cells)<=1e2,TRUE,FALSE)
@@ -796,8 +833,8 @@ plot_CellWeights <- function(x,
   timep <- dim(wgt)[2]
   gaps  <- 20/sqrt(length(wgt))
 
-  if(!is.null(x$DesignMatrix$incompMat))
-    wgt[x$DesignMatrix$incompMat==0] <- NA
+  if(!is.null(im <- x$DesignMatrix$incompMat))
+    wgt[im==0 | is.na(im)] <- NA
 
   dat <- cbind(expand.grid(y=seq_len(sumCl),
                            x=seq_len(timep)),
